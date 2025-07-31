@@ -103,10 +103,13 @@ Amazon Bedrockのモデルを呼び出すには、AWSの認証情報に適切な
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream"
             ],
-            "Resource": "arn:aws:bedrock:<your-aws-region>::/model/<your-model-id>"
+            "Resource": "arn:aws:bedrock:<your-aws-region>::/foundation-model/<your-model-id>"
         }
     ]
 }
+```
+
+**注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/foundation-model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
 ```
 
 **注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
