@@ -34,3 +34,6 @@ go.work.sum
 # Build artifacts for llm-cli
 /llm-cli
 /bin/
+
+# macOS specific files
+.DS_Store
