@@ -54,6 +54,63 @@ llm-cli profile remove my-new-profile
 llm-cli profile edit
 ```
 
+### Amazon Bedrock の設定
+
+Amazon Bedrock を利用するには、AWSの認証情報とリージョン設定が必要です。
+認証情報は、プロファイルに直接設定するか、AWS SDKのデフォルトの認証情報プロバイダチェーン（環境変数、IAMロールなど）を利用できます。
+
+**Bedrockプロファイルの例:**
+
+```bash
+# 新しいBedrockプロファイルを追加
+llm-cli profile add bedrock-claude
+
+# プロバイダーをbedrockに設定
+llm-cli profile set provider bedrock
+
+# モデルIDを設定 (例: Anthropic Claude v2)
+llm-cli profile set model anthropic.claude-v2
+
+# AWSリージョンを設定 (例: us-east-1)
+llm-cli profile set aws_region us-east-1
+
+# アクセスキーIDとシークレットアクセスキーを直接設定する場合 (非推奨: 環境変数やIAMロールを推奨)
+llm-cli profile set aws_access_key_id YOUR_AWS_ACCESS_KEY_ID
+llm-cli profile set aws_secret_access_key YOUR_AWS_SECRET_ACCESS_KEY
+
+# 設定後、このプロファイルに切り替える
+llm-cli profile use bedrock-claude
+```
+
+**認証情報の優先順位:**
+
+1.  `llm-cli` プロファイルに直接設定された `aws_access_key_id` と `aws_secret_access_key`
+2.  AWS SDKのデフォルトの認証情報プロバイダチェーン（環境変数 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`、IAMロールなど）
+
+#### 必要なIAMポリシー
+
+Amazon Bedrockのモデルを呼び出すには、AWSの認証情報に適切なIAMポリシーが付与されている必要があります。最小限必要なアクションは `bedrock:InvokeModel` および `bedrock:InvokeModelWithResponseStream` です。
+
+**最小限のIAMポリシーの例:**
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "bedrock:InvokeModel",
+                "bedrock:InvokeModelWithResponseStream"
+            ],
+            "Resource": "arn:aws:bedrock:<your-aws-region>::/model/<your-model-id>"
+        }
+    ]
+}
+```
+
+**注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
+
 ## 設定
 
 設定は `~/.config/llm-cli/config.json` に保存されます。`profile` コマンド群で管理できますが、`profile edit` で直接編集することも可能です。
