@@ -30,10 +30,11 @@ clean:
 	@$(GOCLEAN)
 	@rm -f $(BINARY_NAME)
 	@rm -rf $(OUTPUT_DIR)
+	@rm -f extract_release_notes.go release_notes.txt
 
 # Cross-compile for all target platforms
-cross-compile: build-mac-universal build-linux build-windows
-	@echo "Cross-compilation finished. Binaries are in platform-specific directories under $(OUTPUT_DIR)/."
+cross-compile: build-mac-universal build-linux build-windows package-all
+	@echo "Cross-compilation and packaging finished. Release assets are in the $(OUTPUT_DIR)/ directory."
 
 # Build for Linux (amd64)
 build-linux:
@@ -60,3 +61,21 @@ build-mac-universal:
 	# Clean up intermediate files
 	@rm $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-amd64 $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-arm64
 	@echo "Created Universal binary at $(OUTPUT_DIR)/darwin-universal/$(BINARY_NAME)"
+
+# Package all binaries into archives
+package-all: package-darwin package-linux package-windows
+
+# Package macOS binary
+package-darwin:
+	@echo "Packaging macOS binary..."
+	@cd $(OUTPUT_DIR)/darwin-universal && tar -czvf ../$(BINARY_NAME)-darwin-universal.tar.gz $(BINARY_NAME)
+
+# Package Linux binary
+package-linux:
+	@echo "Packaging Linux binary..."
+	@cd $(OUTPUT_DIR)/linux-amd64 && tar -czvf ../$(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME)
+
+# Package Windows binary
+package-windows:
+	@echo "Packaging Windows binary..."
+	@cd $(OUTPUT_DIR)/windows-amd64 && zip -r ../$(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME).exe
