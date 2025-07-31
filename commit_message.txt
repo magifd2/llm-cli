@@ -1,0 +1,13 @@
+feat: Add Amazon Bedrock support
+
+This commit introduces support for Amazon Bedrock, allowing `llm-cli` to interact with models hosted on AWS.
+
+Key changes include:
+- BedrockProvider: Implemented `internal/llm/bedrock.go` to handle communication with Amazon Bedrock's `InvokeModel` and `InvokeModelWithResponseStream` APIs. It supports both standard and streaming responses.
+- Flexible AWS Authentication: The `BedrockProvider` can now load AWS credentials via:
+    - AWS shared config profiles (e.g., `~/.aws/config`, `~/.aws/credentials`), including SSO profiles.
+    - Directly provided `aws_access_key_id` and `aws_secret_access_key` in the `llm-cli` profile configuration.
+- Configuration Updates:
+    - `internal/config/config.go`: `Profile` struct updated to include `AWSRegion`, `AWSProfileName`, `AWSAccessKeyID`, and `AWSSecretAccessKey` fields.
+    - `cmd/set.go`: Updated to allow setting these new AWS-specific configuration keys.
+- Dependency Management: Added AWS SDK for Go v2 (`github.com/aws/aws-sdk-go-v2`) as a dependency.

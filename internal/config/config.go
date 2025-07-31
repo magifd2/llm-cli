@@ -22,9 +22,11 @@ type Profile struct {
 	Provider string `json:"provider"`
 	Endpoint string `json:"endpoint,omitempty"`
 	APIKey    string `json:"api_key,omitempty"`
-	Model     string `json:"model"`
-	ProjectID string `json:"project_id,omitempty"`
-	Location  string `json:"location,omitempty"`
+	Model          string `json:"model"`
+	AWSRegion      string `json:"aws_region,omitempty"`
+	AWSProfileName string `json:"aws_profile_name,omitempty"`
+	AWSAccessKeyID string `json:"aws_access_key_id,omitempty"`
+	AWSSecretAccessKey string `json:"aws_secret_access_key,omitempty"`
 }
 
 // Load reads the configuration file from the user's config directory.
