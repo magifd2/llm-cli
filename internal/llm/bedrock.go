@@ -9,14 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime/types"
-	"github.com/magifd2/llm-cli/internal/config"
+	appconfig "github.com/magifd2/llm-cli/internal/config"
 )
 
 // BedrockProvider implements the Provider interface for Amazon Bedrock.
 type BedrockProvider struct {
-	Profile config.Profile
+	Profile appconfig.Profile
 }
 
 // claudeRequest represents the request body for Anthropic Claude models.
@@ -40,12 +41,12 @@ type claudeStreamResponseChunk struct {
 }
 
 // newBedrockClient creates a new Bedrock Runtime client.
-func newBedrockClient(ctx context.Context, profile config.Profile) (*bedrockruntime.Client, error) {
+func newBedrockClient(ctx context.Context, profile appconfig.Profile) (*bedrockruntime.Client, error) {
 	var opts []func(*config.LoadOptions) error
 	opts = append(opts, config.WithRegion(profile.AWSRegion))
 
 	if profile.AWSAccessKeyID != "" && profile.AWSSecretAccessKey != "" {
-		opts = append(opts, config.WithCredentialsProvider(aws.NewStaticCredentialsProvider(profile.AWSAccessKeyID, profile.AWSSecretAccessKey, "")))
+		opts = append(opts, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(profile.AWSAccessKeyID, profile.AWSSecretAccessKey, "")))
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
