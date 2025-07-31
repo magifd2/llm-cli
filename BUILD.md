@@ -29,10 +29,10 @@ cd llm-cli
     *   現在利用しているOS・アーキテクチャ向けのバイナリを一つだけビルドします。開発中に動作確認するのに便利です。
 
 *   **`make cross-compile`**
-    *   配布用に、複数のOS・アーキテクチャ向けのバイナリを一度にビルドします。
-        *   `bin/llm-cli-darwin-universal` (macOS Universal Binary: Intel & Apple Silicon)
-        *   `bin/llm-cli-linux-amd64` (Linux amd64)
-        *   `bin/llm-cli-windows-amd64.exe` (Windows amd64)
+    *   配布用に、複数のOS・アーキテクチャ向けのバイナリを一度にビルドします。成果物は `bin/` 以下のプラットフォーム別ディレクトリに生成されます。
+        *   `bin/darwin-universal/llm-cli` (macOS Universal Binary)
+        *   `bin/linux-amd64/llm-cli` (Linux amd64)
+        *   `bin/windows-amd64/llm-cli.exe` (Windows amd64)
 
 *   **`make test`**
     *   プロジェクトのテストを実行します。

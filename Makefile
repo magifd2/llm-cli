@@ -33,30 +33,30 @@ clean:
 
 # Cross-compile for all target platforms
 cross-compile: build-mac-universal build-linux build-windows
-	@echo "Cross-compilation finished. Binaries are in the $(OUTPUT_DIR)/ directory."
+	@echo "Cross-compilation finished. Binaries are in platform-specific directories under $(OUTPUT_DIR)/."
 
 # Build for Linux (amd64)
 build-linux:
 	@echo "Building for Linux (amd64)..."
-	@mkdir -p $(OUTPUT_DIR)
-	@GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(BINARY_NAME)-linux-amd64 .
+	@mkdir -p $(OUTPUT_DIR)/linux-amd64
+	@GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/linux-amd64/$(BINARY_NAME) .
 
 # Build for Windows (amd64)
 build-windows:
 	@echo "Building for Windows (amd64)..."
-	@mkdir -p $(OUTPUT_DIR)
-	@GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(BINARY_NAME)-windows-amd64.exe .
+	@mkdir -p $(OUTPUT_DIR)/windows-amd64
+	@GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/windows-amd64/$(BINARY_NAME).exe .
 
 # Build macOS Universal Binary
 build-mac-universal:
 	@echo "Building for macOS (Universal)..."
-	@mkdir -p $(OUTPUT_DIR)
+	@mkdir -p $(OUTPUT_DIR)/darwin-universal
 	# Build for amd64
 	@GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-amd64 .
 	# Build for arm64
 	@GOOS=darwin GOARCH=arm64 $(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-arm64 .
 	# Combine with lipo
-	@lipo -create -output $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-universal $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-amd64 $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-arm64
+	@lipo -create -output $(OUTPUT_DIR)/darwin-universal/$(BINARY_NAME) $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-amd64 $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-arm64
 	# Clean up intermediate files
 	@rm $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-amd64 $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-arm64
-	@echo "Created Universal binary at $(OUTPUT_DIR)/$(BINARY_NAME)-darwin-universal"
+	@echo "Created Universal binary at $(OUTPUT_DIR)/darwin-universal/$(BINARY_NAME)"
