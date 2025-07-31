@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
@@ -19,6 +20,7 @@ var askCmd = &cobra.Command{
 	Use:   "ask",
 	Short: "Send a prompt to the LLM",
 	Long:  `Sends a prompt to the configured LLM and prints the response.`,
+	Args:  cobra.NoArgs, // Disallow positional arguments
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Get prompt values
 		prompt, _ := cmd.Flags().GetString("prompt")
@@ -29,6 +31,12 @@ var askCmd = &cobra.Command{
 		// 2. Load prompts
 		userPromptStr := loadPrompt(prompt, promptFile)
 		systemPromptStr := loadPrompt(systemPrompt, systemPromptFile)
+
+		// If no user prompt is provided via flags or stdin, exit with an error.
+		if userPromptStr == "" {
+			fmt.Fprintf(os.Stderr, "Error: No user prompt provided. Please use --prompt, --prompt-file, or pipe input to stdin.\n")
+			os.Exit(1)
+		}
 
 		// 3. Get LLM provider
         cfg, err := config.Load()
@@ -50,7 +58,14 @@ var askCmd = &cobra.Command{
         case "openai":
             provider = &llm.OpenAIProvider{Profile: activeProfile}
         case "bedrock":
-            provider = &llm.BedrockProvider{Profile: activeProfile}
+            // Check the model ID to determine which Bedrock provider to use
+            if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
+                provider = &llm.NovaBedrockProvider{Profile: activeProfile}
+            } else {
+                // Fallback for other Bedrock models not yet implemented
+                fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
+                provider = &llm.MockProvider{}
+            }
         default:
             // For now, default to mock provider if not ollama
             fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)

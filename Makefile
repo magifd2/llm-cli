@@ -10,14 +10,15 @@ OUTPUT_DIR=bin
 # LDFLAGS for smaller binaries (-s strips symbol table, -w strips DWARF debug info)
 LDFLAGS=-ldflags="-s -w"
 
-.PHONY: all build clean test cross-compile build-mac-universal build-linux build-windows
+.PHONY: all build clean test cross-compile build-mac-universal build-linux build-windows package-all
 
-all: build
+all: build cross-compile
 
 # Build for the current OS/Arch
 build:
 	@echo "Building for $(shell go env GOOS)/$(shell go env GOARCH)..."
-	@$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME) .
+	@mkdir -p $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)
+	@$(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) .
 
 # Run tests
 test:

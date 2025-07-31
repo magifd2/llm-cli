@@ -12,11 +12,11 @@
 
 ## 使い方
 
-### プロンプトの送信
+### プロンプトの送信 (必須)
 
 ```bash
 # シンプルなプロンプト
-llm-cli ask --prompt "日本の首都はどこですか？"
+llm-cli ask --prompt "日本の首都はどこですか？" # --prompt または --prompt-file が必須です
 
 # システムプロンプト付き
 llm-cli ask --prompt "自己紹介して" --system-prompt "あなたは猫です。語尾にニャンを付けて話してください。"
@@ -24,8 +24,8 @@ llm-cli ask --prompt "自己紹介して" --system-prompt "あなたは猫です
 # ストリーミング表示
 llm-cli ask --prompt "1から100まで数えてください" --stream
 
-# ファイルからプロンプトを読み込む
-llm-cli ask --prompt-file ./my_prompt.txt
+# ファイルからプロンプトを読み込む (または標準入力からパイプ)
+llm-cli ask --prompt-file ./my_prompt.txt 
 
 # パイプで渡す
 echo "この文章を要約して" | llm-cli ask
@@ -65,21 +65,21 @@ Amazon Bedrock を利用するには、AWSの認証情報とリージョン設�
 # 新しいBedrockプロファイルを追加
 llm-cli profile add bedrock-claude
 
-# プロバイダーをbedrockに設定
+# プロバイダーをbedrockに設定 (NovaモデルはMessages APIを使用します)
 llm-cli profile set provider bedrock
 
-# モデルIDを設定 (例: Anthropic Claude v2)
-llm-cli profile set model anthropic.claude-v2
+# モデルIDを設定 (例: Amazon Nova Lite v1)
+llm-cli profile set model amazon.nova-lite-v1:0
 
-# AWSリージョンを設定 (例: us-east-1)
-llm-cli profile set aws_region us-east-1
+# AWSリージョンを設定 (例: ap-northeast-1)
+llm-cli profile set aws_region ap-northeast-1
 
 # アクセスキーIDとシークレットアクセスキーを直接設定する場合 (非推奨: 環境変数やIAMロールを推奨)
 llm-cli profile set aws_access_key_id YOUR_AWS_ACCESS_KEY_ID
 llm-cli profile set aws_secret_access_key YOUR_AWS_SECRET_ACCESS_KEY
 
 # 設定後、このプロファイルに切り替える
-llm-cli profile use bedrock-claude
+llm-cli profile use bedrock-claude # または llm-cli profile use bedrock
 ```
 
 **認証情報の優先順位:**
@@ -103,16 +103,13 @@ Amazon Bedrockのモデルを呼び出すには、AWSの認証情報に適切な
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream"
             ],
-            "Resource": "arn:aws:bedrock:<your-aws-region>::/foundation-model/<your-model-id>"
+            "Resource": "arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova*"
         }
     ]
 }
 ```
 
 **注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/foundation-model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
-```
-
-**注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
 
 ## 設定
 
