@@ -31,6 +31,7 @@ cd llm-cli
 *   **`make cross-compile`**
     *   配布用に、複数のOS・アーキテクチャ向けのバイナリを一度にビルドします。成果物は `bin/` 以下のプラットフォーム別ディレクトリに生成されます。
         *   `bin/darwin-universal/llm-cli` (macOS Universal Binary)
+            *   **注意**: このターゲットはmacOS環境でのみ実行可能です。
         *   `bin/linux-amd64/llm-cli` (Linux amd64)
         *   `bin/windows-amd64/llm-cli.exe` (Windows amd64)
 
