@@ -41,10 +41,10 @@ var setCmd = &cobra.Command{
 			profile.Provider = value
 		case "endpoint":
 			profile.Endpoint = value
-		case "api_key":
+				case "api_key":
 			profile.APIKey = value
-		case "aws_profile_name":
-			profile.AWSProfileName = value
+		case "aws_region":
+			profile.AWSRegion = value
 		case "aws_access_key_id":
 			profile.AWSAccessKeyID = value
 		case "aws_secret_access_key":

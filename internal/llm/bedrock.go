@@ -46,8 +46,6 @@ func newBedrockClient(ctx context.Context, profile config.Profile) (*bedrockrunt
 
 	if profile.AWSAccessKeyID != "" && profile.AWSSecretAccessKey != "" {
 		opts = append(opts, config.WithCredentialsProvider(aws.NewStaticCredentialsProvider(profile.AWSAccessKeyID, profile.AWSSecretAccessKey, "")))
-	} else if profile.AWSProfileName != "" {
-		opts = append(opts, config.WithSharedConfigProfile(profile.AWSProfileName))
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)

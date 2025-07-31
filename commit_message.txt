@@ -1,13 +1,11 @@
-feat: Add Amazon Bedrock support
+refactor(bedrock): Restrict AWS authentication to explicit keys or roles
 
-This commit introduces support for Amazon Bedrock, allowing `llm-cli` to interact with models hosted on AWS.
+This commit refactors the Amazon Bedrock provider to no longer load credentials from `~/.aws/` shared configuration profiles. Authentication is now limited to:
 
-Key changes include:
-- BedrockProvider: Implemented `internal/llm/bedrock.go` to handle communication with Amazon Bedrock's `InvokeModel` and `InvokeModelWithResponseStream` APIs. It supports both standard and streaming responses.
-- Flexible AWS Authentication: The `BedrockProvider` can now load AWS credentials via:
-    - AWS shared config profiles (e.g., `~/.aws/config`, `~/.aws/credentials`), including SSO profiles.
-    - Directly provided `aws_access_key_id` and `aws_secret_access_key` in the `llm-cli` profile configuration.
-- Configuration Updates:
-    - `internal/config/config.go`: `Profile` struct updated to include `AWSRegion`, `AWSProfileName`, `AWSAccessKeyID`, and `AWSSecretAccessKey` fields.
-    - `cmd/set.go`: Updated to allow setting these new AWS-specific configuration keys.
-- Dependency Management: Added AWS SDK for Go v2 (`github.com/aws/aws-sdk-go-v2`) as a dependency.
+- Explicit `aws_access_key_id` and `aws_secret_access_key` provided in the `llm-cli` profile.
+- AWS SDK's default credential chain (environment variables, IAM roles, etc.) when explicit keys are not provided.
+
+Changes include:
+- `internal/config/config.go`: Removed `AWSProfileName` field from `Profile` struct.
+- `cmd/set.go`: Removed `aws_profile_name` setting logic.
+- `internal/llm/bedrock.go`: Modified `newBedrockClient` to remove `config.WithSharedConfigProfile` and prioritize static credentials.
