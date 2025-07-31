@@ -43,6 +43,10 @@ var setCmd = &cobra.Command{
 			profile.Endpoint = value
 		case "api_key":
 			profile.APIKey = value
+		case "project_id":
+			profile.ProjectID = value
+		case "location":
+			profile.Location = value
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown configuration key '%s'.\n", key)
 			os.Exit(1)

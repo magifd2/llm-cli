@@ -49,6 +49,8 @@ var askCmd = &cobra.Command{
             provider = &llm.OllamaProvider{Profile: activeProfile}
         case "openai":
             provider = &llm.OpenAIProvider{Profile: activeProfile}
+        case "vertex-ai":
+            provider = &llm.VertexAIProvider{Profile: activeProfile}
         default:
             // For now, default to mock provider if not ollama
             fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)

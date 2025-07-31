@@ -21,8 +21,10 @@ const (
 type Profile struct {
 	Provider string `json:"provider"`
 	Endpoint string `json:"endpoint,omitempty"`
-	APIKey   string `json:"api_key,omitempty"`
-	Model    string `json:"model"`
+	APIKey    string `json:"api_key,omitempty"`
+	Model     string `json:"model"`
+	ProjectID string `json:"project_id,omitempty"`
+	Location  string `json:"location,omitempty"`
 }
 
 // Load reads the configuration file from the user's config directory.
