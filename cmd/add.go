@@ -20,36 +20,38 @@ var addCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		profileName := args[0]
-
-		cfg, err := config.Load()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		if err := addProfile(profileName); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
-
-		if _, ok := cfg.Profiles[profileName]; ok {
-			fmt.Fprintf(os.Stderr, "Error: Profile '%s' already exists.\n", profileName)
-			os.Exit(1)
-		}
-
-		// Copy settings from the default profile
-		defaultProfile, ok := cfg.Profiles["default"]
-		if !ok {
-			// This should not happen if Load() works correctly
-			fmt.Fprintf(os.Stderr, "Error: Default profile not found.\n")
-			os.Exit(1)
-		}
-
-		cfg.Profiles[profileName] = defaultProfile
-
-		if err := cfg.Save(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
-			os.Exit(1)
-		}
-
 		fmt.Printf("Profile '%s' added.\n", profileName)
 		fmt.Printf("To switch to the new profile, run: llm-cli profile use %s\n", profileName)
 	},
+}
+
+func addProfile(profileName string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
+	if _, ok := cfg.Profiles[profileName]; ok {
+		return fmt.Errorf("profile '%s' already exists", profileName)
+	}
+
+	// Copy settings from the default profile
+	defaultProfile, ok := cfg.Profiles["default"]
+	if !ok {
+		// This should not happen if Load() works correctly
+		return fmt.Errorf("default profile not found")
+	}
+
+	cfg.Profiles[profileName] = defaultProfile
+
+	if err := cfg.Save(); err != nil {
+		return fmt.Errorf("saving config: %w", err)
+	}
+	return nil
 }
 
 func init() {

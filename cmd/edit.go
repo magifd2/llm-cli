@@ -20,44 +20,49 @@ var editCmd = &cobra.Command{
 	Short: "Edit the configuration file",
 	Long:  `Opens the configuration file in the default editor ($EDITOR).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		editorEnv := os.Getenv("EDITOR")
-		if editorEnv == "" {
-			editorEnv = "vim"
-		}
-
-		// Find the absolute path of the editor executable to prevent command injection.
-		editorPath, err := exec.LookPath(editorEnv)
-		if err != nil {
-			// If the primary editor is not found, try nano as a fallback.
-			editorPath, err = exec.LookPath("nano")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: EDITOR environment variable not set, and vim/nano not found in PATH.\n")
-				os.Exit(1)
-			}
-		}
-
-		configPath, err := config.GetConfigPath()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting config path: %v\n", err)
-			os.Exit(1)
-		}
-
-		// Ensure the directory exists before trying to open the file
-		if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating config directory: %v\n", err)
-			os.Exit(1)
-		}
-
-		execCmd := exec.Command(editorPath, configPath)
-		execCmd.Stdin = os.Stdin
-		execCmd.Stdout = os.Stdout
-		execCmd.Stderr = os.Stderr
-
-		if err := execCmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening editor: %v\n", err)
+		if err := runEditCommand(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 	},
+}
+
+// runEditCommand contains the core logic for the edit command.
+func runEditCommand() error {
+	editorEnv := os.Getenv("EDITOR")
+	if editorEnv == "" {
+		editorEnv = "vim"
+	}
+
+	// Find the absolute path of the editor executable to prevent command injection.
+	editorPath, err := exec.LookPath(editorEnv)
+	if err != nil {
+		// If the primary editor is not found, try nano as a fallback.
+		editorPath, err = exec.LookPath("nano")
+		if err != nil {
+			return fmt.Errorf("EDITOR environment variable not set, and vim/nano not found in PATH")
+		}
+	}
+
+	configPath, err := config.GetConfigPath()
+	if err != nil {
+		return fmt.Errorf("getting config path: %w", err)
+	}
+
+	// Ensure the directory exists before trying to open the file
+	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		return fmt.Errorf("creating config directory: %w", err)
+	}
+
+	execCmd := exec.Command(editorPath, configPath)
+	execCmd.Stdin = os.Stdin
+	execCmd.Stdout = os.Stdout
+	execCmd.Stderr = os.Stderr
+
+	if err := execCmd.Run(); err != nil {
+		return fmt.Errorf("opening editor: %w", err)
+	}
+	return nil
 }
 
 func init() {

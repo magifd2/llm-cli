@@ -20,27 +20,29 @@ var useCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		profileName := args[0]
-
-		cfg, err := config.Load()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		if err := useProfile(profileName); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
-
-		if _, ok := cfg.Profiles[profileName]; !ok {
-			fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
-			os.Exit(1)
-		}
-
-		cfg.CurrentProfile = profileName
-		if err := cfg.Save(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
-			os.Exit(1)
-		}
-
 		fmt.Printf("Switched to profile: %s\n", profileName)
 	},
+}
 
+func useProfile(profileName string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
+	if _, ok := cfg.Profiles[profileName]; !ok {
+		return fmt.Errorf("profile '%s' not found", profileName)
+	}
+
+	cfg.CurrentProfile = profileName
+	if err := cfg.Save(); err != nil {
+		return fmt.Errorf("saving config: %w", err)
+	}
+	return nil
 }
 
 func init() {

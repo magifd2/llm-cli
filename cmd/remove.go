@@ -20,37 +20,38 @@ var removeCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		profileName := args[0]
-
-		if profileName == "default" {
-			fmt.Fprintf(os.Stderr, "Error: The 'default' profile cannot be removed.\n")
+		if err := removeProfile(profileName); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
-
-		cfg, err := config.Load()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
-		}
-
-		if _, ok := cfg.Profiles[profileName]; !ok {
-			fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
-			os.Exit(1)
-		}
-
-		if cfg.CurrentProfile == profileName {
-			fmt.Fprintf(os.Stderr, "Error: Cannot remove the currently active profile. Please switch to another profile first.\n")
-			os.Exit(1)
-		}
-
-		delete(cfg.Profiles, profileName)
-
-		if err := cfg.Save(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
-			os.Exit(1)
-		}
-
 		fmt.Printf("Profile '%s' removed.\n", profileName)
 	},
+}
+
+func removeProfile(profileName string) error {
+	if profileName == "default" {
+		return fmt.Errorf("the 'default' profile cannot be removed")
+	}
+
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
+	if _, ok := cfg.Profiles[profileName]; !ok {
+		return fmt.Errorf("profile '%s' not found", profileName)
+	}
+
+	if cfg.CurrentProfile == profileName {
+		return fmt.Errorf("cannot remove the currently active profile. Please switch to another profile first")
+	}
+
+	delete(cfg.Profiles, profileName)
+
+	if err := cfg.Save(); err != nil {
+		return fmt.Errorf("saving config: %w", err)
+	}
+	return nil
 }
 
 func init() {

@@ -14,6 +14,13 @@ For future development plans and roadmap, please refer to the [Development Plan]
 - **Never trust user input, including environment variables. All external inputs must be validated and sanitized to prevent injection attacks. (環境変数を含む、いかなるユーザー入力も信頼してはならない。全ての外部入力は、インジェクション攻撃を防ぐために検証され、無害化されなければならない。)**
 - **Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations. (APIキーや認証情報などの機密情報は、決してハードコードされたり、安全でない場所に保存されたりしてはならない。)**
 
+### Secure Development Lifecycle (セキュア開発ライフサイクル)
+
+- **Threat Modeling at Design Phase (設計段階での脅威モデリング):** Before implementing a new feature, consider potential threats. For example, when adding a feature that interacts with the filesystem, evaluate risks like path traversal.
+- **Security-Focused Code Reviews (セキュリティを重視したコードレビュー):** All code reviews must include a specific check for security vulnerabilities. Do not approve pull requests that have not been reviewed from a security perspective.
+- **Safe Testing Practices (安全なテストの実施):** When testing for vulnerabilities, use harmless proof-of-concept payloads. Before running tests that involve external inputs like environment variables, always inspect their contents first.
+- **Dependency Scanning (依存関係のスキャン):** Regularly scan project dependencies for known vulnerabilities using tools like `govulncheck`.
+
 ### Code Style and Formatting
 
 - Adhere to standard Go formatting (`gofmt`).
