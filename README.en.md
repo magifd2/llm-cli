@@ -161,6 +161,12 @@ Manages configuration profiles.
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`         |
 | `edit`     | Opens the `config.json` file in your default text editor.          |
 
+## Contributing & Development
+
+Contributions, such as adding new features or fixing bugs, are welcome.
+
+If you are interested in adding a new LLM provider, please see the [Provider Development Guide](./DEVELOPING_PROVIDERS.en.md).
+
 ## Acknowledgements
 
 This project was developed with Google's AI assistant "Gemini" as a coding partner.
