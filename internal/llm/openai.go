@@ -101,7 +101,7 @@ type openAIStreamResponse struct {
 
 // ChatStream sends a streaming chat request to the OpenAI-compatible API.
 func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
-	defer close(responseChan)
+	// Note: The caller is responsible for closing the responseChan.
 
 	endpoint := p.Profile.Endpoint
 	if endpoint == "" {
@@ -156,7 +156,12 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPromp
 
 		data := strings.TrimPrefix(line, "data: ")
 
-		var streamResp openAIStreamResponse
+        // Check for stream errors
+        if strings.Contains(data, "\"error\":") {
+            return fmt.Errorf("streaming error: %s", data)
+        }
+
+        var streamResp openAIStreamResponse
 		if err := json.Unmarshal([]byte(data), &streamResp); err != nil {
 			// Ignore json parsing errors for now, as some streams might have metadata
 			continue

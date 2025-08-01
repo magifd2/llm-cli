@@ -16,19 +16,19 @@
 
 ```bash
 # Simple prompt
-llm-cli ask --prompt "What is the capital of Japan?" # --prompt or --prompt-file is required
+llm-cli prompt --user-prompt "What is the capital of Japan?" # --user-prompt or --user-prompt-file is required
 
 # With system prompt
-llm-cli ask --prompt "Introduce yourself" --system-prompt "You are a cat. Speak with 'nyan' at the end of your sentences."
+llm-cli prompt --user-prompt "Introduce yourself" --system-prompt "You are a cat. Speak with 'nyan' at the end of your sentences."
 
 # Streaming display
-llm-cli ask --prompt "Count from 1 to 100" --stream
+llm-cli prompt --user-prompt "Count from 1 to 100" --stream
 
 # Read prompt from a file (or pipe from standard input)
-llm-cli ask --prompt-file ./my_prompt.txt
+llm-cli prompt --user-prompt-file ./my_prompt.txt
 
 # Pass via pipe
-echo "Summarize this text" | llm-cli ask
+echo "Summarize this text" | llm-cli prompt
 ```
 
 ### Managing Profiles

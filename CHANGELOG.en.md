@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### 🐛 Bug Fixes
+*   **API Error Handling**: Fixed an issue where API errors during streaming mode were not detected, causing the program to exit silently. Resolved a race condition in asynchronous handling to make error reporting more robust.
+
 ## v0.0.3 - 2025-08-01
 
 ### 🚨 Breaking Changes

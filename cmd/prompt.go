@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
@@ -79,18 +80,37 @@ var promptCmd = &cobra.Command{
         // 4. Get and print response
         stream, _ := cmd.Flags().GetBool("stream")
         if stream {
+            var wg sync.WaitGroup
+            // Use a buffered channel to prevent the goroutine from blocking.
+            errChan := make(chan error, 1)
             responseChan := make(chan string)
+
+            wg.Add(1)
             go func() {
+                defer wg.Done()
+                defer close(responseChan)
                 err := provider.ChatStream(cmd.Context(), systemPromptStr, userPromptStr, responseChan)
                 if err != nil {
-                    fmt.Fprintf(os.Stderr, "\nError during streaming: %v\n", err)
+                    errChan <- err
                 }
             }()
 
+            // Read from the response channel until it's closed
             for token := range responseChan {
                 fmt.Print(token)
             }
-            fmt.Println()
+
+            // Wait for the goroutine to finish completely
+            wg.Wait()
+            close(errChan)
+
+            // After the goroutine is done, check for any error it might have sent.
+            if err := <-errChan; err != nil {
+                fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
+                os.Exit(1)
+            }
+
+            fmt.Println() // Print a final newline after the stream ends
         } else {
             response, err := provider.Chat(systemPromptStr, userPromptStr)
             if err != nil {

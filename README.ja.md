@@ -16,19 +16,19 @@
 
 ```bash
 # シンプルなプロンプト
-llm-cli ask --prompt "日本の首都はどこですか？" # --prompt または --prompt-file が必須です
+llm-cli prompt --user-prompt "日本の首都はどこですか？" # --user-prompt または --user-prompt-file が必須です
 
 # システムプロンプト付き
-llm-cli ask --prompt "自己紹介して" --system-prompt "あなたは猫です。語尾にニャンを付けて話してください。"
+llm-cli prompt --user-prompt "自己紹介して" --system-prompt "あなたは猫です。語尾にニャンを付けて話してください。"
 
 # ストリーミング表示
-llm-cli ask --prompt "1から100まで数えてください" --stream
+llm-cli prompt --user-prompt "1から100まで数えてください" --stream
 
 # ファイルからプロンプトを読み込む (または標準入力からパイプ)
-llm-cli ask --prompt-file ./my_prompt.txt 
+llm-cli prompt --user-prompt-file ./my_prompt.txt 
 
 # パイプで渡す
-echo "この文章を要約して" | llm-cli ask
+echo "この文章を要約して" | llm-cli prompt
 ```
 
 ### プロファイルの管理

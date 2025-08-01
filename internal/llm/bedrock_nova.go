@@ -81,6 +81,13 @@ type novaMessagesAPIStreamChunk struct {
 	} `json:"contentBlockDelta"`
 }
 
+// bedrockErrorResponse defines the structure for an error response from Bedrock.
+// e.g., {"message": "...", "type": "ValidationException"}
+type bedrockErrorResponse struct {
+	Message string `json:"message"`
+	Type    string `json:"type"`
+}
+
 // newBedrockClient creates a new Bedrock Runtime client.
 func newBedrockClient(ctx context.Context, profile appconfig.Profile) (*bedrockruntime.Client, error) {
 	var opts []func(*config.LoadOptions) error
@@ -152,23 +159,29 @@ func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string,
 
 	responseBodyBytes := output.Body
 
-	// Unmarshal into the new response struct
+	// Attempt to unmarshal into the success response structure
 	var novaResp novaCombinedAPIResponse
-	if err := json.Unmarshal(responseBodyBytes, &novaResp); err != nil {
-		return "", fmt.Errorf("failed to unmarshal response body: %w", err)
+	if err := json.Unmarshal(responseBodyBytes, &novaResp); err == nil {
+		// Success case: Extract text from the new response structure
+		if len(novaResp.Output.Message.Content) > 0 {
+			return novaResp.Output.Message.Content[0].Text, nil
+		}
+		return "", fmt.Errorf("no content found in response")
 	}
 
-	// Extract text from the new response structure
-	if len(novaResp.Output.Message.Content) > 0 {
-		return novaResp.Output.Message.Content[0].Text, nil
+	// If unmarshaling into the success structure fails, try to unmarshal into the error structure
+	var errorResp bedrockErrorResponse
+	if err := json.Unmarshal(responseBodyBytes, &errorResp); err == nil {
+		return "", fmt.Errorf("model error (%s): %s", errorResp.Type, errorResp.Message)
 	}
 
-	return "", fmt.Errorf("no content found in response")
+	// If both fail, return a generic error with the raw response body
+	return "", fmt.Errorf("failed to unmarshal response body: %s", string(responseBodyBytes))
 }
 
 // ChatStream sends a streaming chat request to the Amazon Bedrock API using the Messages API format.
 func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, userPrompt string, responseChan chan<- string) error {
-	defer close(responseChan)
+	// Note: The caller is responsible for closing the responseChan.
 
 	client, err := newBedrockClient(ctx, p.Profile)
 	if err != nil {
@@ -235,10 +248,14 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 				continue
 			}
 			responseChan <- chunk.ContentBlockDelta.Delta.Text
-		default:
-			// Handle other event types if necessary.
-			return fmt.Errorf("unhandled stream event type: %T", v) // Added for debugging unhandled types
+		// Handle other event types if necessary.
+			// fmt.Fprintf(os.Stderr, "unhandled stream event type: %T\n", v)
 		}
+	}
+
+	// After the loop, check for any errors that occurred during streaming.
+	if err := stream.Err(); err != nil {
+		return fmt.Errorf("streaming error: %w", err)
 	}
 
 	return nil
