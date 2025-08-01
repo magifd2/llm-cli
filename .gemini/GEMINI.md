@@ -13,9 +13,14 @@ For future development plans and roadmap, please refer to the [Development Plan]
 - Follow idiomatic Go practices.
 - Keep functions concise and focused on a single responsibility.
 
+### Concurrency Best Practices
+- When implementing asynchronous processes or communication between goroutines, prioritize standard Go concurrency patterns like `sync.WaitGroup` and buffered channels.
+- Avoid overly complex `select` controls for state management to prevent race conditions and ensure robust error handling.
+
 ### Testing Principles
 
 - Write unit tests for new features and bug fixes.
+- For critical bug fixes, especially those related to core logic like API interaction or concurrency, add a regression test to prevent recurrence.
 - Ensure tests cover critical paths and edge cases.
 - Use `make test` to run tests.
 
@@ -23,28 +28,21 @@ For future development plans and roadmap, please refer to the [Development Plan]
 - Use `golangci-lint` for static code analysis.
 - Ensure all code passes lint checks before committing.
 
-### Rollback Strategy
-- Before making significant changes, commit the current state to allow for easy rollback if necessary.
-
 ### Commit Message Conventions
 
-- Use Conventional Commits specification (e.g., `feat:`, `fix:`, `refactor:`, `docs:`).
-- Keep commit messages concise and descriptive.
+- Use the Conventional Commits specification (e.g., `feat:`, `fix:`, `refactor:`, `docs:`).
+- For multi-line commit messages, write the message in a temporary file (e.g., `.git/COMMIT_MSG`) and use `git commit -F <file>` to avoid shell interpretation errors. This is the standard procedure.
 - Explain *why* a change was made, not just *what* was changed.
 
 ### Bug Fixes
 - Identify and address the root cause of bugs, avoiding temporary or superficial fixes.
 
-### Code Quality and Security
-- Prioritize robustness, security, and maintainability in design and implementation.
-- Adopt a "security-first" approach as a fundamental policy in all aspects of development.
-
 ### Documentation Principles
 
-- All user-facing documentation (README, BUILD, CHANGELOG) must be maintained in both English (`.en.md`) and Japanese (`.ja.md`).
-- The root `README.md` serves as a language selection page.
-- Ensure consistency between language versions.
-- When a feature is changed or added, ensure all relevant documentation is updated accordingly.
+- **Language Policy**: All documentation will be written in Japanese first (as the primary source of truth) and then translated into English.
+  - The English version should include a note indicating it is a translation and that the Japanese version takes precedence in case of discrepancies.
+- **Scope**: Maintain both user-facing documents (e.g., `README`) and developer-facing documents (e.g., `DEVELOPING_PROVIDERS.md`).
+- **Maintenance**: When a feature is changed or added, ensure all relevant documentation is updated accordingly.
 
 ### File and Directory Operations
 - When deleting or modifying files/directories, always use absolute paths instead of relative paths to prevent unintended operations.
