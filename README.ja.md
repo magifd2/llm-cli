@@ -1,97 +1,119 @@
 # llm-cli
 
-`llm-cli` は、ローカル（Ollama, LM Studio）またはリモートのLLM（将来的にはOpenAIなど）と、コマンドラインから直接対話するためのCLIツールです。
+`llm-cli` は、ローカルおよびリモートのLLM（大規模言語モデル）と直接対話するためのコマンドラインインターフェースツールです。Ollama、LM Studio、Amazon Bedrockのような様々なプロバイダーに対して、統一された方法でプロンプトを送信したり、設定を管理したりする機能を提供します。
 
-## 特徴
+## 主な特徴
 
-*   **マルチプロバイダー対応**: Ollama, LM Studio (OpenAI互換API) に対応。
-*   **プロファイル管理**: 複数のLLM設定（エンドポイント、モデルなど）をプロファイルとして保存し、簡単に切り替え可能。
+*   **マルチプロバイダー対応**: Ollama、LM Studio（およびその他のOpenAI互換API）、Amazon Bedrockとシームレスに連携します。
+*   **プロファイル管理**: 複数のLLM設定（エンドポイント、モデル、APIキー）をプロファイルとして保存し、簡単に切り替えられます。
 *   **柔軟な入力**: コマンドライン引数、ファイル、標準入力（パイプ）からプロンプトを渡せます。
-*   **ストリーミング表示**: LLMからの応答をリアルタイムで表示します。
-*   **Goによるシングルバイナリ**: 設定ファイル以外は単一の実行ファイルで動作し、簡単に配布できます。
+*   **ストリーミング表示**: `--stream` フラグを使用することで、LLMからの応答をリアルタイムで表示します。
+*   **シングルバイナリ**: 設定ファイルを除き、単一の実行ファイルで動作するため、配布や利用が簡単です。
 
-## 使い方
+## インストール
 
-### プロンプトの送信 (必須)
+1.  **バイナリのダウンロード**: プロジェクトリポジトリの[リリースページ](https://github.com/magifd2/llm-cli/releases)にアクセスします。
+2.  お使いのOSとアーキテクチャに適したバイナリをダウンロードします。
+3.  **PATHへの配置**: ダウンロードした実行ファイルを、システムの`PATH`に含まれるディレクトリ（macOS/Linuxでは `/usr/local/bin`、Windowsでは任意のカスタムディレクトリなど）に移動します。
+4.  **実行権限の付与**: macOSおよびLinuxでは、実行権限を付与する必要がある場合があります。
+    ```bash
+    chmod +x /path/to/your/llm-cli
+    ```
 
-```bash
-# シンプルなプロンプト
-llm-cli prompt --user-prompt "日本の首都はどこですか？" # --user-prompt または --user-prompt-file が必須です
+## クイックスタート
 
-# システムプロンプト付き
-llm-cli prompt --user-prompt "自己紹介して" --system-prompt "あなたは猫です。語尾にニャンを付けて話してください。"
-
-# ストリーミング表示
-llm-cli prompt --user-prompt "1から100まで数えてください" --stream
-
-# ファイルからプロンプトを読み込む (または標準入力からパイプ)
-llm-cli prompt --user-prompt-file ./my_prompt.txt 
-
-# パイプで渡す
-echo "この文章を要約して" | llm-cli prompt
-```
-
-### プロファイルの管理
+インストールと設定が完了すれば、すぐにLLMとの対話を開始できます。
 
 ```bash
-# プロファイルの一覧表示
-llm-cli profile list
+# デフォルトのLLMに簡単なプロンプトを送信
+llm-cli prompt "地球と月の距離はどのくらいですか？"
 
-# 新しいプロファイルの追加 (defaultプロファイルをコピーして作成)
-llm-cli profile add my-new-profile
-
-# 使用するプロファイルの切り替え
-llm-cli profile use my-new-profile
-
-# 現在のプロファイルの設定を変更
-llm-cli profile set model "new-model-name"
-llm-cli profile set endpoint "http://my-endpoint/v1"
-
-# プロファイルの削除
-llm-cli profile remove my-new-profile
-
-# 設定ファイルを直接編集
-llm-cli profile edit
+# ストリーミングで応答を取得
+llm-cli prompt "音楽を発見したロボットの短編小説を教えてください。" --stream
 ```
 
-### Amazon Bedrock の設定
+## 設定
 
-Amazon Bedrock を利用するには、AWSの認証情報とリージョン設定が必要です。
-認証情報は、プロファイルに直接設定するか、AWS SDKのデフォルトの認証情報プロバイダチェーン（環境変数、IAMロールなど）を利用できます。
+`llm-cli` のすべての設定は、`~/.config/llm-cli/config.json` にある単一の設定ファイルで管理されます。`llm-cli profile edit` でこのファイルを直接編集することもできますが、`profile` サブコマンド群を使用することが推奨されます。
 
-**Bedrockプロファイルの例:**
+### プロバイダー別のセットアップ
+
+#### 1. Ollama
+
+Ollamaをデフォルトのアドレス（`http://localhost:11434`）で実行している場合、`llm-cli` は追加設定なしで動作します。`default` プロファイルがこの設定に最適化されています。
+
+Ollamaで取得した特定のモデルを使用するには：
+```bash
+# defaultプロファイルに切り替え（まだの場合）
+llm-cli profile use default
+
+# 使用したいモデルを設定
+llm-cli profile set model "llama3"
+```
+
+#### 2. LM Studio (およびその他のOpenAI互換API)
+
+LM Studioを使用するには、まずローカルサーバーを起動する必要があります。
+
+1.  **サーバーの起動**: LM Studioで、「Local Server」タブ（`<->` アイコン）に移動します。
+2.  **モデルのロード**: モデルを選択してロードし、準備が完了するのを待ちます。
+3.  **サーバーの開始**: 「Start Server」ボタンをクリックします。上部に表示されるサーバーURL（例: `http://localhost:1234/v1`）を控えておきます。
+
+次に、`llm-cli` がこのサーバーを使用するように設定します。
 
 ```bash
-# 新しいBedrockプロファイルを追加
-llm-cli profile add bedrock-claude
+# LM Studio用に新しいプロファイルを追加
+llm-cli profile add lmstudio
 
-# プロバイダーをbedrockに設定 (NovaモデルはMessages APIを使用します)
-llm-cli profile set provider bedrock
+# プロバイダーを "openai" に設定
+llm-cli profile set provider openai
 
-# モデルIDを設定 (例: Amazon Nova Lite v1)
-llm-cli profile set model amazon.nova-lite-v1:0
+# エンドポイントをLM StudioのURLに設定
+llm-cli profile set endpoint "http://localhost:1234/v1"
 
-# AWSリージョンを設定 (例: ap-northeast-1)
-llm-cli profile set aws_region ap-northeast-1
+# ローカルサーバーではモデル名は任意の場合が多いですが、設定は必須です。
+# 通常はLM Studioのモデル識別子を使用できます。
+llm-cli profile set model "gemma-2-9b-it"
 
-# アクセスキーIDとシークレットアクセスキーを直接設定する場合 (非推奨: 環境変数やIAMロールを推奨)
-llm-cli profile set aws_access_key_id YOUR_AWS_ACCESS_KEY_ID
-llm-cli profile set aws_secret_access_key YOUR_AWS_SECRET_ACCESS_KEY
-
-# 設定後、このプロファイルに切り替える
-llm-cli profile use bedrock-claude # または llm-cli profile use bedrock
+# 新しく作成したプロファイルに切り替え
+llm-cli profile use lmstudio
 ```
+
+これで、LM Studioのモデルにプロンプトを送信できます。
+
+#### 3. Amazon Bedrock
+
+Amazon Bedrockを利用するには、有効なAWS認証情報とリージョンの指定が必要です。
 
 **認証情報の優先順位:**
+1.  `llm-cli` プロファイルに直接設定された認証情報（`aws_access_key_id`, `aws_secret_access_key`）。
+2.  標準のAWS SDK認証情報チェーン（環境変数、共有認証情報ファイル、IAMロールなど）。
 
-1.  `llm-cli` プロファイルに直接設定された `aws_access_key_id` と `aws_secret_access_key`
-2.  AWS SDKのデフォルトの認証情報プロバイダチェーン（環境変数 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`、IAMロールなど）
+**設定手順:**
 
-#### 必要なIAMポリシー
+```bash
+# Bedrock用に新しいプロファイルを追加
+llm-cli profile add bedrock-nova
 
-Amazon Bedrockのモデルを呼び出すには、AWSの認証情報に適切なIAMポリシーが付与されている必要があります。最小限必要なアクションは `bedrock:InvokeModel` および `bedrock:InvokeModelWithResponseStream` です。
+# プロバイダーを "bedrock" に設定
+llm-cli profile set provider bedrock
 
-**最小限のIAMポリシーの例:**
+# 使用したいモデルのモデルIDを設定
+llm-cli profile set model "amazon.nova-lite-v1:0"
+
+# モデルを呼び出すAWSリージョンを設定
+llm-cli profile set aws_region "us-east-1"
+
+# (任意) 必要に応じて認証情報を直接設定
+# llm-cli profile set aws_access_key_id "YOUR_KEY_ID"
+# llm-cli profile set aws_secret_access_key "YOUR_SECRET_KEY"
+
+# Bedrockプロファイルに切り替え
+llm-cli profile use bedrock-nova
+```
+
+**必要なIAMポリシー:**
+AWS IDには、Bedrockモデルを呼び出す権限が必要です。
 
 ```json
 {
@@ -103,19 +125,41 @@ Amazon Bedrockのモデルを呼び出すには、AWSの認証情報に適切な
                 "bedrock:InvokeModel",
                 "bedrock:InvokeModelWithResponseStream"
             ],
-            "Resource": "arn:aws:bedrock:ap-northeast-1::foundation-model/amazon.nova*"
+            "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"
         }
     ]
 }
 ```
+*注意: ベストプラクティスとして、`Resource` は必要な特定のモデルに限定することを強く推奨します。*
 
-**注意**: `<your-aws-region>` と `<your-model-id>` は、実際に使用するリージョンとモデルIDに置き換えてください。セキュリティのベストプラクティスとして、`Resource` は可能な限り具体的なモデルに限定することを強く推奨します。複数のモデルを使用する場合は、`"Resource": "arn:aws:bedrock:<your-aws-region>::/foundation-model/*"` のようにワイルドカードを使用することもできますが、その場合はアクセス権が広がることに注意してください。
+## コマンドリファレンス
 
-## 設定
+### `llm-cli prompt`
 
-設定は `~/.config/llm-cli/config.json` に保存されます。`profile` コマンド群で管理できますが、`profile edit` で直接編集することも可能です。
+現在アクティブなLLMにプロンプトを送信します。
 
-**セキュリティに関する注意**: APIキーなどの機密情報は、設定ファイルに平文で保存されます。このファイルへのアクセスは、ご自身の責任で管理してください。
+| フラグ                 | 短縮形 | 説明                                                 |
+| -------------------- | ------ | ---------------------------------------------------- |
+| `--user-prompt`      | `-p`   | モデルに送信するメインのプロンプトテキスト。         |
+| `--user-prompt-file` | `-f`   | ユーザープロンプトを含むファイルへのパス。`-`で標準入力。 |
+| `--system-prompt`    | `-P`   | モデルへのオプションのシステムレベルの指示。         |
+| `--system-prompt-file`| `-F`   | システムプロンプトを含むファイルへのパス。           |
+| `--stream`           |        | 応答をリアルタイムストリームとして表示するかどうか。 |
+
+*プロンプト用フラグが指定されない場合、最初の位置引数がプロンプトとして使用されます。それも無い場合は、標準入力から読み込まれます。*
+
+### `llm-cli profile`
+
+設定プロファイルを管理します。
+
+| サブコマンド | 説明                                                               |
+| ---------- | ------------------------------------------------------------------ |
+| `list`     | 利用可能な全プロファイルとアクティブなプロファイルを表示します。     |
+| `use`      | アクティブなプロファイルを切り替えます。`llm-cli profile use <profile-name>` |
+| `add`      | 既存のプロファイルをコピーして新しいプロファイルを作成します。`llm-cli profile add <new-name> [--from <existing-name>]` |
+| `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>` |
+| `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`     |
+| `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開きます。     |
 
 ## 謝辞
 
