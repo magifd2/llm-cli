@@ -50,10 +50,22 @@ var promptCmd = &cobra.Command{
             os.Exit(1)
         }
 
-        activeProfile, ok := cfg.Profiles[cfg.CurrentProfile]
-        if !ok {
-            fmt.Fprintf(os.Stderr, "Error: Active profile '%s' not found.\n", cfg.CurrentProfile)
-            os.Exit(1)
+        profileName, _ := cmd.Flags().GetString("profile")
+        var activeProfile config.Profile
+        var ok bool
+
+        if profileName != "" {
+            activeProfile, ok = cfg.Profiles[profileName]
+            if !ok {
+                fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
+                os.Exit(1)
+            }
+        } else {
+            activeProfile, ok = cfg.Profiles[cfg.CurrentProfile]
+            if !ok {
+                fmt.Fprintf(os.Stderr, "Error: Active profile '%s' not found.\n", cfg.CurrentProfile)
+                os.Exit(1)
+            }
         }
 
         var provider llm.Provider
@@ -169,4 +181,5 @@ func init() {
 	promptCmd.Flags().StringP("system-prompt", "P", "", "System prompt to send to the LLM")
 	promptCmd.Flags().StringP("system-prompt-file", "F", "", "Path to a file containing the system prompt.")
 	promptCmd.Flags().Bool("stream", false, "Enable streaming response")
+	promptCmd.Flags().String("profile", "", "Use a specific profile for this command (overrides current active profile)")
 }
