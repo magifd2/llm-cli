@@ -7,6 +7,13 @@ For future development plans and roadmap, please refer to the [Development Plan]
 
 ## Development Rules
 
+### Security First Principle (セキュリティ第一原則)
+
+- **Security is the highest priority, overriding all other considerations such as functionality or performance. (セキュリティは、機能性やパフォーマンスといった他のいかなる考慮事項よりも優先される、絶対的な最優先事項である。)**
+- **All code, dependencies, and configurations must be reviewed for potential security vulnerabilities before being committed. (全てのコード、依存関係、設定は、コミットされる前に、潜在的なセキュリティ脆弱性についてレビューされなければならない。)**
+- **Never trust user input, including environment variables. All external inputs must be validated and sanitized to prevent injection attacks. (環境変数を含む、いかなるユーザー入力も信頼してはならない。全ての外部入力は、インジェクション攻撃を防ぐために検証され、無害化されなければならない。)**
+- **Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations. (APIキーや認証情報などの機密情報は、決してハードコードされたり、安全でない場所に保存されたりしてはならない。)**
+
 ### Code Style and Formatting
 
 - Adhere to standard Go formatting (`gofmt`).
