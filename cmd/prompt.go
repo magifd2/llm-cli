@@ -15,26 +15,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// askCmd represents the ask command
-var askCmd = &cobra.Command{
-	Use:   "ask",
+// promptCmd represents the prompt command
+var promptCmd = &cobra.Command{
+	Use:   "prompt",
 	Short: "Send a prompt to the LLM",
 	Long:  `Sends a prompt to the configured LLM and prints the response.`,
-	Args:  cobra.NoArgs, // Disallow positional arguments
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Get prompt values
-		prompt, _ := cmd.Flags().GetString("prompt")
-		promptFile, _ := cmd.Flags().GetString("prompt-file")
+		userPrompt, _ := cmd.Flags().GetString("user-prompt")
+		userPromptFile, _ := cmd.Flags().GetString("user-prompt-file")
 		systemPrompt, _ := cmd.Flags().GetString("system-prompt")
 		systemPromptFile, _ := cmd.Flags().GetString("system-prompt-file")
 
 		// 2. Load prompts
-		userPromptStr := loadPrompt(prompt, promptFile)
+		userPromptStr := loadPrompt(userPrompt, userPromptFile)
 		systemPromptStr := loadPrompt(systemPrompt, systemPromptFile)
 
-		// If no user prompt is provided via flags or stdin, exit with an error.
+		// If no user prompt is provided via flags or stdin, check for positional arguments
+		if userPromptStr == "" && len(args) > 0 {
+			userPromptStr = args[0] // Take the first positional argument as the prompt
+		}
+
+		// If userPromptStr is still empty, it's an error.
 		if userPromptStr == "" {
-			fmt.Fprintf(os.Stderr, "Error: No user prompt provided. Please use --prompt, --prompt-file, or pipe input to stdin.\n")
+			fmt.Fprintf(os.Stderr, "Error: No user prompt provided. Please use --user-prompt, --user-prompt-file, provide a positional argument, or pipe input to stdin.\n")
 			os.Exit(1)
 		}
 
@@ -132,11 +136,11 @@ func loadPrompt(directValue, filePath string) string {
 }
 
 func init() {
-	rootCmd.AddCommand(askCmd)
+	rootCmd.AddCommand(promptCmd)
 
-	askCmd.Flags().String("prompt", "", "Prompt to send to the LLM")
-	askCmd.Flags().String("prompt-file", "", "Path to a file containing the prompt. Use '-' for stdin.")
-	askCmd.Flags().String("system-prompt", "", "System prompt to send to the LLM")
-	askCmd.Flags().String("system-prompt-file", "", "Path to a file containing the system prompt.")
-	askCmd.Flags().Bool("stream", false, "Enable streaming response")
+	promptCmd.Flags().StringP("user-prompt", "p", "", "User prompt to send to the LLM")
+	promptCmd.Flags().StringP("user-prompt-file", "f", "", "Path to a file containing the user prompt. Use '-' for stdin.")
+	promptCmd.Flags().StringP("system-prompt", "P", "", "System prompt to send to the LLM")
+	promptCmd.Flags().StringP("system-prompt-file", "F", "", "Path to a file containing the system prompt.")
+	promptCmd.Flags().Bool("stream", false, "Enable streaming response")
 }
