@@ -2,6 +2,9 @@
 
 This document outlines the development and build rules specific to this project, intended for the Gemini agent.
 
+For a detailed history of development and key decisions, please refer to the [Development Log](DEVELOPMENT_LOG.md).
+For future development plans and roadmap, please refer to the [Development Plan](DEVELOPMENT_PLAN.md).
+
 ## Development Rules
 
 ### Code Style and Formatting
@@ -15,6 +18,10 @@ This document outlines the development and build rules specific to this project,
 - Write unit tests for new features and bug fixes.
 - Ensure tests cover critical paths and edge cases.
 - Use `make test` to run tests.
+
+### Linting
+- Use `golangci-lint` for static code analysis.
+- Ensure all code passes lint checks before committing.
 
 ### Rollback Strategy
 - Before making significant changes, commit the current state to allow for easy rollback if necessary.
@@ -38,6 +45,9 @@ This document outlines the development and build rules specific to this project,
 - The root `README.md` serves as a language selection page.
 - Ensure consistency between language versions.
 - When a feature is changed or added, ensure all relevant documentation is updated accordingly.
+
+### File and Directory Operations
+- When deleting or modifying files/directories, always use absolute paths instead of relative paths to prevent unintended operations.
 
 ## Build Rules
 

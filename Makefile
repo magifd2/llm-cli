@@ -25,7 +25,10 @@ test:
 	@echo "Running tests..."
 	@$(GOTEST) -v ./...
 
-# Clean up build artifacts
+# Run linters
+lint:
+	@echo "Running linters..."
+	@$(GOCMD) run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run ./...
 clean:
 	@echo "Cleaning up..."
 	@$(GOCLEAN)

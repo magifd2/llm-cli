@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.0.3 - 2025-08-01
+
+### 🚨 Breaking Changes
+*   **Command Name and Flag Changes**: The `ask` command has been renamed to `prompt`. The `--prompt` flag has been renamed to `--user-prompt`, and `--prompt-file` has been renamed to `--user-prompt-file`. Existing scripts and workflows will need to be updated.
+
+### ✨ Features
+*   **Command Name and Flag Refactoring**: Renamed the `ask` command to `prompt` and the `--prompt` flag to `--user-prompt`. Added shorthand flags for `--user-prompt` (`-p`), `--system-prompt` (`-P`), `--user-prompt-file` (`-f`), and `--system-prompt-file` (`-F`).
+
+### 📝 Documentation
+*   **Added Development Log and Plan**: `DEVELOPMENT_LOG.md` and `DEVELOPMENT_PLAN.md` were added to record project history and future plans.
+*   **Updated Development Rules**: `GEMINI.md` was updated with new development rules (e.g., absolute paths for file operations, root cause bug fixes, documentation updates, pre-commit commits, code quality and security, comment principles).
+
 ## v0.0.2 - 2025-08-01
 
 ### ✨ Features

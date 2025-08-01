@@ -1,0 +1,45 @@
+# Development Log
+
+This document records the detailed development history and key decisions made during the project.
+
+## 2025-08-01
+
+### Amazon Bedrock Nova Model Implementation
+
+- **Initial Attempt & Debugging**: Began implementing Amazon Bedrock support. Encountered numerous `ValidationException` errors due to incorrect request/response formats for Nova models (e.g., `required key [messages] not found`, `extraneous key [maxTokenCount] is not permitted`, `extraneous key [temperature] is not permitted`, `extraneous key [topP] is not permitted`, `expected type: JSONArray, found: String`).
+- **API Guide Consultation**: Utilized the provided Nova API guide (https://docs.aws.amazon.com/nova/latest/userguide/using-invoke-api.html) to understand the correct JSON structures for requests and streaming responses.
+- **Refactoring `internal/llm/bedrock.go`**: Completely re-implemented the Bedrock provider to strictly adhere to Nova Messages API specification.
+  - Redefined request/response structures (`novaMessageContent`, `novaMessage`, `novaSystemPrompt`, `novaMessagesAPIRequest`, `novaCombinedAPIResponse`, `novaMessagesAPIStreamChunk`).
+  - Adjusted prompt and inference parameter handling (e.g., nesting parameters under `inferenceConfig`).
+  - Corrected streaming response parsing to extract text from `contentBlockDelta.delta.text`.
+- **Streaming Debugging**: Initially, streaming produced no output. Debugging revealed that `novaMessagesAPIStreamChunk`'s `Type` and `Delta.Type` fields were empty, indicating a mismatch with the actual JSON. Removed these fields from the struct and simplified the streaming logic to directly process `ContentBlockDelta.Delta.Text`.
+
+### Command Renaming and Flag Refactoring
+
+- **`ask` to `prompt`**: Renamed the `ask` command to `prompt` for better intuitiveness.
+- **Flag Renaming**: Renamed `--prompt` to `--user-prompt` and introduced shorthand flags (`-p`, `-P`, `-f`, `-F`) for user and system prompts/files.
+- **Prompt Validation**: Centralized prompt validation in `cmd/prompt.go` (formerly `cmd/ask.go`), ensuring that a prompt is always provided via flags, positional arguments, or stdin.
+
+### Documentation Multilingual Support
+
+- **File Renaming**: Renamed `README.md`, `BUILD.md`, `CHANGELOG.md` to `README.ja.md`, `BUILD.ja.md`, `CHANGELOG.ja.md` respectively.
+- **English Versions**: Created `README.en.md`, `BUILD.en.md`, `CHANGELOG.en.md` by translating the Japanese content.
+- **Language Selector**: Created a new root `README.md` to serve as a language selection page.
+
+### Makefile Improvements
+
+- **`make all` Enhancement**: Modified `Makefile` so that `make all` now executes both `make build` (for current OS/ARCH) and `make cross-compile` (for all platforms), generating all binaries and archives.
+- **Build Output Paths**: Ensured `make build` outputs binaries to `bin/<OS>-<ARCH>/llm-cli` for better organization.
+
+### Tooling and Development Rules
+
+- **`golangci-lint` Introduction**: Integrated `golangci-lint` for static code analysis. Added `lint` target to `Makefile`.
+- **`GEMINI.md` Guidelines**: Established `GEMINI.md` as a project guideline document, including rules for:
+  - Code Style and Formatting (including meaningful comments).
+  - Testing Principles.
+  - Rollback Strategy (commit before major changes).
+  - Commit Message Conventions.
+  - Bug Fixes (root cause analysis).
+  - Code Quality and Security (robustness, safety, maintainability, security-first).
+  - Documentation Principles (multilingual, update on feature change).
+  - File and Directory Operations (absolute paths).

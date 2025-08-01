@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.0.3 - 2025-08-01
+
+### 🚨 Breaking Changes
+*   **コマンド名とフラグの変更**: `ask` コマンドが `prompt` に変更されました。また、`--prompt` フラグは `--user-prompt` にリネームされ、`--prompt-file` は `--user-prompt-file` にリネームされました。既存のスクリプトやワークフローを更新する必要があります。
+
+### ✨ Features
+*   **コマンド名とフラグのリファクタリング**: `ask` コマンドを `prompt` に変更し、`--prompt` フラグを `--user-prompt` にリネームしました。また、`--user-prompt` (`-p`), `--system-prompt` (`-P`), `--user-prompt-file` (`-f`), `--system-prompt-file` (`-F`) の省略形を追加しました。
+
+### 📝 Documentation
+*   **開発ログと開発計画の追加**: プロジェクトの経緯と今後の計画を記録するため、`DEVELOPMENT_LOG.md` と `DEVELOPMENT_PLAN.md` を追加しました。
+*   **開発ルールの更新**: `GEMINI.md` に開発ルール（絶対パスの使用、根本原因の修正、ドキュメント更新、コミット前のコミット、コード品質とセキュリティ、コメントの原則）を追加しました。
+
 ## v0.0.2 - 2025-08-01
 
 ### ✨ Features
