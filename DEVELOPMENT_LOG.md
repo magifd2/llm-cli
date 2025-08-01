@@ -11,6 +11,17 @@ This document records the detailed development history and key decisions made du
 - **Updated placeholder descriptions** in Cobra commands for better clarity.
 - **Identified a significant lack of test coverage** as a major technical debt. Decided to prioritize test implementation in the next development phase.
 
+## 2025-08-01 (LLM Provider Test Strategy Re-evaluation)
+
+- **Attempted to implement comprehensive unit tests for `internal/llm` package**:
+  - Initial strategy involved using `httptest.Server` for mocking and `io.Pipe` for streaming control.
+  - Encountered severe deadlocking issues during `ChatStream` cancellation tests, primarily due to the blocking nature of `io.Reader` operations and the inability of `context.Context` to directly interrupt them.
+  - Multiple attempts were made to resolve the deadlocks by refactoring `ollama.go` (e.g., `bufio.Scanner` to `bufio.NewReader`, goroutine-based `ReadBytes` with channels) and refining test mocks (e.g., `http.CloseNotifier`).
+  - Despite extensive debugging and re-evaluation, a stable, non-deadlocking test pattern for streaming cancellation could not be established without fundamentally altering the core `internal/llm` implementation.
+- **Decision**: Due to the high complexity and significant development overhead, the implementation of dedicated unit tests for the `internal/llm` package is **temporarily frozen**.
+- **Policy Update**: A new policy has been added to `DEVELOPMENT_PLAN.md` and `GEMINI.md` strictly prohibiting modifications to existing, functionally verified code within `internal/llm` unless critical for security or essential functionality, to ensure operational stability.
+- **Future Outlook**: Future enhancements or refactoring in this area will require a thoroughly re-evaluated and approved testing strategy, potentially involving a "Block-2" provider model with a redesigned I/O layer.
+
 ## 2025-08-01 (Initial Work)
 
 ### Amazon Bedrock Nova Model Implementation
