@@ -30,12 +30,11 @@ type Profile struct {
 
 // Load reads the configuration file from the user's config directory.
 func Load() (*Config, error) {
-	home, err := os.UserHomeDir()
+	configPath, err := GetConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	configPath := filepath.Join(home, configDir, configFile)
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -63,12 +62,11 @@ func Load() (*Config, error) {
 
 // Save writes the configuration to the user's config directory.
 func (c *Config) Save() error {
-	home, err := os.UserHomeDir()
+	configPath, err := GetConfigPath()
 	if err != nil {
 		return err
 	}
 
-	configPath := filepath.Join(home, configDir, configFile)
 	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
 		return err
 	}
@@ -79,4 +77,13 @@ func (c *Config) Save() error {
 	}
 
 	return os.WriteFile(configPath, data, 0644)
+}
+
+// GetConfigPath returns the absolute path to the configuration file.
+func GetConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, configDir, configFile), nil
 }

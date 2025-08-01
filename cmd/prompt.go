@@ -142,7 +142,13 @@ func loadPrompt(directValue, filePath string) string {
 		return string(content)
 	}
 	// Check if stdin is being piped
-	stat, _ := os.Stdin.Stat()
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		// This is not a critical error, just means no stdin is available.
+		// We can ignore it and return an empty string.
+		return ""
+	}
+
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		content, err := io.ReadAll(os.Stdin)
 		if err != nil {

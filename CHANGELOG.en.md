@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### ♻️ Refactor
+*   **Code Audit and Quality Improvements**: Performed a full code audit and fixed potential bugs and vulnerabilities. Hardened against command injection in `profile edit`, centralized config path management, and improved error messages to enhance robustness and maintainability.
+
 ## v0.0.4 - 2025-08-01
 
 ### 🐛 Bug Fixes

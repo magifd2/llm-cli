@@ -5,23 +5,17 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 // profileCmd represents the profile command
 var profileCmd = &cobra.Command{
 	Use:   "profile",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Manage configuration profiles",
+	Long:  `The profile command and its subcommands help you manage different configurations for various LLM providers.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("profile called")
+		// Show help if no subcommand is given
+		_ = cmd.Help()
 	},
 }
 

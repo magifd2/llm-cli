@@ -2,9 +2,19 @@
 
 This document records the detailed development history and key decisions made during the project.
 
-## 2025-08-01
+## 2025-08-01 (Code Audit and Refactoring)
+
+- **Conducted a full code audit** to identify potential bugs and vulnerabilities.
+- **Identified and fixed a potential OS command injection vulnerability** in the `profile edit` command by validating the editor path with `exec.LookPath`.
+- **Refactored configuration path handling** by creating `config.GetConfigPath()` to centralize the logic and prevent inconsistencies between `cmd/edit.go` and `internal/config/config.go`.
+- **Improved error handling** for stdin reading and provided more user-friendly error messages for invalid keys in `profile set`.
+- **Updated placeholder descriptions** in Cobra commands for better clarity.
+- **Identified a significant lack of test coverage** as a major technical debt. Decided to prioritize test implementation in the next development phase.
+
+## 2025-08-01 (Initial Work)
 
 ### Amazon Bedrock Nova Model Implementation
+...
 
 - **Initial Attempt & Debugging**: Began implementing Amazon Bedrock support. Encountered numerous `ValidationException` errors due to incorrect request/response formats for Nova models (e.g., `required key [messages] not found`, `extraneous key [maxTokenCount] is not permitted`, `extraneous key [temperature] is not permitted`, `extraneous key [topP] is not permitted`, `expected type: JSONArray, found: String`).
 - **API Guide Consultation**: Utilized the provided Nova API guide (https://docs.aws.amazon.com/nova/latest/userguide/using-invoke-api.html) to understand the correct JSON structures for requests and streaming responses.

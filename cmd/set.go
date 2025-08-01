@@ -51,6 +51,7 @@ var setCmd = &cobra.Command{
 			profile.AWSSecretAccessKey = value
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown configuration key '%s'.\n", key)
+			fmt.Fprintln(os.Stderr, "Available keys: model, provider, endpoint, api_key, aws_region, aws_access_key_id, aws_secret_access_key")
 			os.Exit(1)
 		}
 

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -19,26 +20,27 @@ var editCmd = &cobra.Command{
 	Short: "Edit the configuration file",
 	Long:  `Opens the configuration file in the default editor ($EDITOR).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		editor := os.Getenv("EDITOR")
-		if editor == "" {
-			// Fallback to vim or nano if EDITOR is not set
-			if _, err := exec.LookPath("vim"); err == nil {
-				editor = "vim"
-			} else if _, err := exec.LookPath("nano"); err == nil {
-				editor = "nano"
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: EDITOR environment variable not set, and vim/nano not found.\n")
+		editorEnv := os.Getenv("EDITOR")
+		if editorEnv == "" {
+			editorEnv = "vim"
+		}
+
+		// Find the absolute path of the editor executable to prevent command injection.
+		editorPath, err := exec.LookPath(editorEnv)
+		if err != nil {
+			// If the primary editor is not found, try nano as a fallback.
+			editorPath, err = exec.LookPath("nano")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: EDITOR environment variable not set, and vim/nano not found in PATH.\n")
 				os.Exit(1)
 			}
 		}
 
-		home, err := os.UserHomeDir()
+		configPath, err := config.GetConfigPath()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting home directory: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error getting config path: %v\n", err)
 			os.Exit(1)
 		}
-		// Note: This path needs to be in sync with internal/config/config.go
-		configPath := filepath.Join(home, ".config", "llm-cli", "config.json")
 
 		// Ensure the directory exists before trying to open the file
 		if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
@@ -46,7 +48,7 @@ var editCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		execCmd := exec.Command(editor, configPath)
+		execCmd := exec.Command(editorPath, configPath)
 		execCmd.Stdin = os.Stdin
 		execCmd.Stdout = os.Stdout
 		execCmd.Stderr = os.Stderr
