@@ -4,13 +4,7 @@ This document outlines the future development roadmap and planned feature enhanc
 
 ## Short-Term Goals
 
-### 1. Amazon Bedrock - Support for Additional Models
-
-- **Objective**: Extend `llm-cli` to support other foundational models available through Amazon Bedrock, beyond the currently implemented Nova models.
-- **Target Models**: Prioritize widely used models such as Anthropic Claude (e.g., `anthropic.claude-v2`, `anthropic.claude-3-sonnet-20240229-v1:0`).
-- **Implementation Strategy**: Following the successful refactoring for Nova models, implement new provider files (e.g., `bedrock_claude.go`) for each model family, adhering to their specific API request/response formats and streaming protocols.
-
-### 2. Google Cloud Platform (GCP) Vertex AI Generative AI - Re-attempt Integration
+### 1. Google Cloud Platform (GCP) Vertex AI Generative AI - Re-attempt Integration
 
 - **Objective**: Integrate `llm-cli` with GCP Vertex AI's Generative AI services.
 - **Lessons Learned from Previous Attempt**: Analyze the reasons for the previous failure (e.g., authentication issues, API format mismatches, SDK usage). Focus on robust error handling and clear debugging outputs.
@@ -21,7 +15,7 @@ This document outlines the future development roadmap and planned feature enhanc
   - Ensure proper authentication mechanisms (e.g., service accounts, ADC) are supported.
   - Implement both buffered and streaming chat functionalities.
 
-### 3. Enhanced LLM Provider Testing Strategy (テスト戦略の強化)
+### 2. Enhanced LLM Provider Testing Strategy (テスト戦略の強化)
 
 - **Objective**: Implement robust and reliable automated tests for LLM providers (`internal/llm` package) to ensure correctness of request/response handling, especially for streaming APIs. This aims to prevent regressions and improve development efficiency.
 - **Motivation**: Previous attempts to test streaming providers encountered significant challenges, including deadlocks and complex interactions between `context.Context` and blocking I/O operations. This highlighted the need for a more controlled testing environment.
@@ -32,12 +26,18 @@ This document outlines the future development roadmap and planned feature enhanc
   - **Test-Specific Provider**: A dedicated `test_provider.go` will be created to validate the testing framework itself, ensuring `httptest.Server` and `io.Pipe` interactions are correctly handled before applying the pattern to real providers.
   - **Build-Time Switching**: The `cmd/prompt.go` logic will be updated to allow switching between Block-1 and Block-2 providers at build time (e.g., using Go build tags), enabling testing of the new implementations without affecting the default build.
 
-### 4. LLM Provider Unit Testing and Code Stability Policy (LLMプロバイダーのユニットテストとコード安定性ポリシー)
+### 3. LLM Provider Unit Testing and Code Stability Policy (LLMプロバイダーのユニットテストとコード安定性ポリシー)
 
 - **Current Status**: Due to the inherent complexity of testing streaming API interactions and the blocking nature of network I/O in Go, implementing comprehensive unit tests for the `internal/llm` package has proven to be exceptionally challenging. Previous attempts to establish a robust testing framework for these components have resulted in significant development overhead and unresolved issues like deadlocks.
 - **Policy**: For the foreseeable future, the implementation of dedicated unit tests for the `internal/llm` package (LLM providers) is **frozen**. This decision is made to prioritize overall project stability and development efficiency.
 - **Code Stability Mandate**: Any modifications to the existing, functionally verified code within the `internal/llm` package are **strictly prohibited** unless absolutely critical for security or essential functionality. This measure is put in place to prevent regressions and maintain the current operational stability of the LLM interaction core. Future enhancements or refactoring in this area will require a thoroughly re-evaluated and approved testing strategy.
 
 ## Mid-to-Long-Term Goals
+
+### 1. Amazon Bedrock - Support for Additional Models
+
+- **Objective**: Extend `llm-cli` to support other foundational models available through Amazon Bedrock, beyond the currently implemented Nova models.
+- **Target Models**: Prioritize widely used models such as Anthropic Claude (e.g., `anthropic.claude-v2`, `anthropic.claude-3-sonnet-20240229-v1:0`).
+- **Implementation Strategy**: Following the successful refactoring for Nova models, implement new provider files (e.g., `bedrock_claude.go`) for each model family, adhering to their specific API request/response formats and streaming protocols.
 
 - (To be defined based on user feedback, market trends, and project priorities.)
