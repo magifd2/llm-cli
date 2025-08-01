@@ -37,3 +37,4 @@ go.work.sum
 
 # macOS specific files
 .DS_Store
+testdata/
