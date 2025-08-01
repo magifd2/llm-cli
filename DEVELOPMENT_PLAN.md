@@ -32,6 +32,12 @@ This document outlines the future development roadmap and planned feature enhanc
   - **Test-Specific Provider**: A dedicated `test_provider.go` will be created to validate the testing framework itself, ensuring `httptest.Server` and `io.Pipe` interactions are correctly handled before applying the pattern to real providers.
   - **Build-Time Switching**: The `cmd/prompt.go` logic will be updated to allow switching between Block-1 and Block-2 providers at build time (e.g., using Go build tags), enabling testing of the new implementations without affecting the default build.
 
+### 4. LLM Provider Unit Testing and Code Stability Policy (LLMプロバイダーのユニットテストとコード安定性ポリシー)
+
+- **Current Status**: Due to the inherent complexity of testing streaming API interactions and the blocking nature of network I/O in Go, implementing comprehensive unit tests for the `internal/llm` package has proven to be exceptionally challenging. Previous attempts to establish a robust testing framework for these components have resulted in significant development overhead and unresolved issues like deadlocks.
+- **Policy**: For the foreseeable future, the implementation of dedicated unit tests for the `internal/llm` package (LLM providers) is **frozen**. This decision is made to prioritize overall project stability and development efficiency.
+- **Code Stability Mandate**: Any modifications to the existing, functionally verified code within the `internal/llm` package are **strictly prohibited** unless absolutely critical for security or essential functionality. This measure is put in place to prevent regressions and maintain the current operational stability of the LLM interaction core. Future enhancements or refactoring in this area will require a thoroughly re-evaluated and approved testing strategy.
+
 ## Mid-to-Long-Term Goals
 
 - (To be defined based on user feedback, market trends, and project priorities.)
