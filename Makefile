@@ -10,7 +10,12 @@ OUTPUT_DIR=bin
 # LDFLAGS for smaller binaries (-s strips symbol table, -w strips DWARF debug info)
 LDFLAGS=-ldflags="-s -w"
 
-.PHONY: all build clean test cross-compile build-mac-universal build-linux build-windows package-all
+# Installation paths
+PREFIX?=/usr/local
+BIN_DIR=$(PREFIX)/bin
+COMPLETION_DIR=$(PREFIX)/share/zsh/site-functions # Zsh specific, adjust for others
+
+.PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all
 
 all: build cross-compile
 
@@ -29,12 +34,37 @@ test:
 lint:
 	@echo "Running linters..."
 	@$(GOCMD) run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run ./...
+
+# Clean up build artifacts
 clean:
 	@echo "Cleaning up..."
 	@$(GOCLEAN)
 	@rm -f $(BINARY_NAME)
 	@rm -rf $(OUTPUT_DIR)
 	@rm -f extract_release_notes.go release_notes.txt
+
+# Install the binary and completion scripts
+# Usage: make install (installs to /usr/local/bin)
+#        make install PREFIX=~ (installs to ~/bin)
+install: build
+	@echo "Installing $(BINARY_NAME) to $(BIN_DIR)..."
+	@mkdir -p $(BIN_DIR)
+	@cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/
+	@echo "Generating and installing Zsh completion script to $(COMPLETION_DIR)..."
+	@mkdir -p $(COMPLETION_DIR)
+	@$(BIN_DIR)/$(BINARY_NAME) completion zsh > $(COMPLETION_DIR)/_$(BINARY_NAME)
+	@echo "Installation complete. Remember to run 'compinit' in Zsh or restart your shell."
+
+# Uninstall the binary and completion scripts
+# Note: This does NOT remove configuration files (e.g., ~/.config/llm-cli/config.json).
+# Usage: make uninstall (uninstalls from /usr/local/bin)
+#        make uninstall PREFIX=~ (uninstalls from ~/bin)
+uninstall:
+	@echo "Uninstalling $(BINARY_NAME) from $(BIN_DIR)..."
+	@rm -f $(BIN_DIR)/$(BINARY_NAME)
+	@echo "Removing Zsh completion script from $(COMPLETION_DIR)..."
+	@rm -f $(COMPLETION_DIR)/_$(BINARY_NAME)
+	@echo "Uninstallation complete. Configuration files are kept."
 
 # Cross-compile for all target platforms
 cross-compile: build-mac-universal build-linux build-windows package-all
