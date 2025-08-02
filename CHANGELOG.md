@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## v0.0.8 - 2025-08-03
 
 ### ✨ Features
 *   **Profile Check Command**: Added `llm-cli profile check` command to verify and migrate configuration profiles.
@@ -16,6 +16,9 @@
     *   Updated `truncateStringByBytes` to be UTF-8 aware, ensuring that string truncation for size limiting does not corrupt multi-byte characters.
 *   **Configuration Loading Consistency**: Ensured `Limits` struct is always initialized with default values when loading configuration, even if not explicitly present in the config file. This guarantees consistent behavior across all profiles.
 
+## [Unreleased]
+
+
 ## v0.0.7 - 2025-08-03
 
 ### ✨ Features
@@ -24,7 +27,7 @@
     *   `prompt` command now checks these limits, with configurable behavior (`stop` or `warn`) on excess.
     *   `add` command supports setting limits for new profiles via flags (e.g., `--limits-max-prompt-size-bytes`).
     *   `set` command can now configure limits using dot notation (e.g., `limits.on_input_exceeded`).
-    *   `list` command now displays the configured limits for each profile.
+    *   `list` command now displays the configured limits for each profile, enhancing user visibility.
 *   **Improve UX with Spinner**: Added a spinner to the `prompt` command when not using `--stream` mode to provide visual feedback during long-running operations. The spinner is only displayed in interactive terminals.
 
 ### 🐛 Bug Fixes
