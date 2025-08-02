@@ -1,18 +1,36 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 magifd2
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 package cmd
 
 import (
 	"fmt"
-	"os"
+	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
-// profileCmd represents the profile command
+// profileCmd represents the base command for managing configuration profiles.
+// It serves as a container for subcommands like add, list, use, set, remove, and edit.
 var profileCmd = &cobra.Command{
 	Use:   "profile",
 	Short: "Manage configuration profiles",
@@ -23,7 +41,8 @@ var profileCmd = &cobra.Command{
 	},
 }
 
-// showCmd represents the show command
+// showCmd represents the 'profile show' command.
+// This command displays the detailed configuration of a specified profile.
 var showCmd = &cobra.Command{
 	Use:   "show [profile_name]",
 	Short: "Show details of a specific profile",
@@ -51,6 +70,7 @@ var showCmd = &cobra.Command{
 	},
 }
 
+// showProfile prints the details of a given profile to the console.
 func showProfile(profile config.Profile, name string) {
 	fmt.Printf("Profile: %s\n", name)
 	fmt.Printf("  Provider: %s\n", profile.Provider)
@@ -81,6 +101,7 @@ func showProfile(profile config.Profile, name string) {
 	}
 }
 
+// init function registers the profileCmd with the rootCmd and adds the showCmd as a subcommand.
 func init() {
 	rootCmd.AddCommand(profileCmd)
 	profileCmd.AddCommand(showCmd)

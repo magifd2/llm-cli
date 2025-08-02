@@ -1,18 +1,36 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 magifd2
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 package cmd
 
 import (
 	"fmt"
-	"os"
+	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
-// addCmd represents the add command
+// addCmd represents the 'profile add' command.
+// This command allows users to add a new profile for LLM configurations.
 var addCmd = &cobra.Command{
 	Use:   "add [profile_name]",
 	Short: "Add a new profile",
@@ -33,7 +51,8 @@ var addCmd = &cobra.Command{
 		}
 
 		newProfile := config.Profile{}
-		// If no flags are provided, copy from default profile
+		// If no specific flags are provided, the new profile copies settings from the default profile.
+		// Otherwise, it creates a new profile using the values provided by the flags.
 		if !cmd.Flags().Changed("provider") &&
 			!cmd.Flags().Changed("model") &&
 			!cmd.Flags().Changed("endpoint") &&
@@ -88,6 +107,7 @@ var addCmd = &cobra.Command{
 	},
 }
 
+// init function registers the addCmd with the profileCmd and defines its flags.
 func init() {
 	profileCmd.AddCommand(addCmd)
 

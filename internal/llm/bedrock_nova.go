@@ -14,107 +14,123 @@ import (
 	appconfig "github.com/magifd2/llm-cli/internal/config"
 )
 
-// NovaBedrockProvider implements the Provider interface for Amazon Bedrock.
+// NovaBedrockProvider implements the Provider interface for Amazon Bedrock's Anthropic Claude 3 (Nova) models.
+// It handles authentication and communication with the Bedrock Runtime service.
 type NovaBedrockProvider struct {
-	Profile appconfig.Profile
+	Profile appconfig.Profile // The configuration profile for this Bedrock instance.
 }
 
-// novaMessageContent defines the structure for content within a message for Nova.
+// novaMessageContent defines the structure for content within a message for Nova models.
+// Currently, it supports text content.
 type novaMessageContent struct {
-	Text string `json:"text"`
+	Text string `json:"text"` // The text content of the message.
 }
 
-// novaMessage defines the structure for a single message in the conversation for Nova.
+// novaMessage defines the structure for a single message in the conversation for Nova models.
+// It includes the role of the sender and an array of content blocks.
 type novaMessage struct {
-	Role    string               `json:"role"`
-	Content []novaMessageContent `json:"content"`
+	Role    string               `json:"role"`    // The role of the message sender (e.g., "user", "assistant").
+	Content []novaMessageContent `json:"content"` // An array of content blocks, typically containing text.
 }
 
-// novaSystemPrompt defines the structure for a system prompt for Nova.
+// novaSystemPrompt defines the structure for a system prompt for Nova models.
+// System prompts are used to set the behavior or context for the model.
 type novaSystemPrompt struct {
-	Text string `json:"text"`
+	Text string `json:"text"` // The text content of the system prompt.
 }
 
-// inferenceConfig defines the structure for inference parameters.
+// inferenceConfig defines the structure for inference parameters for Nova models.
+// These parameters control the model's generation behavior.
 type inferenceConfig struct {
-	MaxTokens     int      `json:"maxTokens,omitempty"`
-	Temperature   float64  `json:"temperature,omitempty"`
-	TopP          float64  `json:"topP,omitempty"`
-	TopK          int      `json:"topK,omitempty"`
-	StopSequences []string `json:"stopSequences,omitempty"`
+	MaxTokens     int      `json:"maxTokens,omitempty"`     // The maximum number of tokens to generate in the response.
+	Temperature   float64  `json:"temperature,omitempty"`   // Controls the randomness of the output. Higher values mean more random.
+	TopP          float64  `json:"topP,omitempty"`          // Controls diversity via nucleus sampling.
+	TopK          int      `json:"topK,omitempty"`          // Controls diversity by limiting the number of highest probability tokens.
+	StopSequences []string `json:"stopSequences,omitempty"` // A list of sequences that will cause the model to stop generating.
 }
 
 // novaMessagesAPIRequest represents the request body for Nova models using the Messages API.
+// This is the primary request format for Claude 3 models on Bedrock.
 type novaMessagesAPIRequest struct {
-	SchemaVersion   string           `json:"schemaVersion"`
-	Messages        []novaMessage    `json:"messages"`
-	System          []novaSystemPrompt `json:"system,omitempty"`
-	InferenceConfig inferenceConfig  `json:"inferenceConfig,omitempty"`
+	SchemaVersion   string           `json:"schemaVersion"`     // The schema version for the API request (e.g., "messages-v1").
+	Messages        []novaMessage    `json:"messages"`          // The conversation history, including user and assistant messages.
+	System          []novaSystemPrompt `json:"system,omitempty"`    // Optional system prompts to guide the model's behavior.
+	InferenceConfig inferenceConfig  `json:"inferenceConfig,omitempty"` // Optional inference parameters.
 }
 
-// novaCombinedAPIResponse represents the response structure for Nova Messages API.
+// novaCombinedAPIResponse represents the full response structure for Nova Messages API.
+// It includes the generated message, stop reason, and token usage information.
 type novaCombinedAPIResponse struct {
 	Output struct {
 		Message struct {
 			Content []struct {
-				Text string `json:"text"`
-			} `json:"content"`
-			Role string `json:"role"`
-		} `json:"message"`
-	} `json:"output"`
-	StopReason string `json:"stopReason"`
+				Text string `json:"text"` // The text content of the assistant's response.
+			} `json:"content"` // Content blocks of the message.
+			Role string `json:"role"` // The role of the message sender (e.g., "assistant").
+		} `json:"message"` // The generated message from the model.
+	} `json:"output"` // The main output block.
+	StopReason string `json:"stopReason"` // The reason the model stopped generating (e.g., "end_turn", "max_tokens").
 	Usage      struct {
-		InputTokens            int `json:"inputTokens"`
-		OutputTokens           int `json:"outputTokens"`
-		TotalTokens            int `json:"totalTokens"`
-		CacheReadInputTokenCount  int `json:"cacheReadInputTokenCount"`
-		CacheWriteInputTokenCount int `json:"cacheWriteInputTokenCount"`
-	} `json:"usage"`
+		InputTokens            int `json:"inputTokens"`            // Number of input tokens.
+		OutputTokens           int `json:"outputTokens"`           // Number of output tokens.
+		TotalTokens            int `json:"totalTokens"`            // Total number of tokens.
+		CacheReadInputTokenCount  int `json:"cacheReadInputTokenCount"`  // Number of input tokens read from cache.
+		CacheWriteInputTokenCount int `json:"cacheWriteInputTokenCount"` // Number of input tokens written to cache.
+	} `json:"usage"` // Token usage statistics.
 }
 
-// novaMessagesAPIStreamChunk represents a chunk of a streaming response from a Nova Messages API model.
+// novaMessagesAPIStreamChunk represents a single chunk of a streaming response from a Nova Messages API model.
+// It typically contains a delta of content.
 type novaMessagesAPIStreamChunk struct {
 	ContentBlockDelta struct {
 		Delta struct {
-			Text string `json:"text"`
-		} `json:"delta"`
-	} `json:"contentBlockDelta"`
+			Text string `json:"text"` // The incremental text content.
+		} `json:"delta"` // The delta of content.
+	} `json:"contentBlockDelta"` // The content block delta event.
 }
 
 // bedrockErrorResponse defines the structure for an error response from Bedrock.
+// This is used to parse and report errors returned by the Bedrock API.
 // e.g., {"message": "...", "type": "ValidationException"}
 type bedrockErrorResponse struct {
-	Message string `json:"message"`
-	Type    string `json:"type"`
+	Message string `json:"message"` // The error message.
+	Type    string `json:"type"`    // The type of error (e.g., "ValidationException").
 }
 
 // newBedrockClient creates a new Bedrock Runtime client.
+// It configures the client with the specified AWS region and optional static credentials.
 func newBedrockClient(ctx context.Context, profile appconfig.Profile) (*bedrockruntime.Client, error) {
 	var opts []func(*config.LoadOptions) error
+	// Set the AWS region from the profile.
 	opts = append(opts, config.WithRegion(profile.AWSRegion))
 
+	// If AWS access key ID and secret access key are provided, use static credentials.
 	if profile.AWSAccessKeyID != "" && profile.AWSSecretAccessKey != "" {
 		opts = append(opts, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(profile.AWSAccessKeyID, profile.AWSSecretAccessKey, "")))
 	}
 
+	// Load the default AWS configuration with the specified options.
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
+	// Create and return a new Bedrock Runtime client from the loaded configuration.
 	return bedrockruntime.NewFromConfig(cfg), nil
 }
 
 // Chat sends a chat request to the Amazon Bedrock API using the Messages API format.
+// It returns a single, complete response from the model.
 func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string, error) {
 
 	ctx := context.Background()
+	// Create a new Bedrock client.
 	client, err := newBedrockClient(ctx, p.Profile)
 	if err != nil {
 		return "", err
 	}
 
-	// Construct user message
+	// Construct the user message for the API request.
 	messages := []novaMessage{
 		{
 			Role: "user",
@@ -124,13 +140,14 @@ func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string,
 		},
 	}
 
-	// Construct system prompt as a slice of structs, only if it's not empty.
+	// Construct the system prompt as a slice of structs, only if it's not empty.
 	var systemContent []novaSystemPrompt
 	if systemPromptText != "" {
 		systemContent = append(systemContent, novaSystemPrompt{Text: systemPromptText})
 	}
 
-	// Initialize InferenceConfig directly in the struct literal.
+	// Build the request body for the InvokeModel API call.
+	// InferenceConfig is initialized directly with default values.
 	reqBody := novaMessagesAPIRequest{
 		SchemaVersion: "messages-v1",
 		Messages:      messages,
@@ -148,6 +165,7 @@ func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string,
 		return "", fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
+	// Invoke the Bedrock model.
 	output, err := client.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
 		ModelId:     aws.String(p.Profile.Model),
 		ContentType: aws.String("application/json"),
@@ -159,36 +177,38 @@ func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string,
 
 	responseBodyBytes := output.Body
 
-	// Attempt to unmarshal into the success response structure
+	// Attempt to unmarshal into the success response structure.
 	var novaResp novaCombinedAPIResponse
 	if err := json.Unmarshal(responseBodyBytes, &novaResp); err == nil {
-		// Success case: Extract text from the new response structure
+		// Success case: Extract text from the response.
 		if len(novaResp.Output.Message.Content) > 0 {
 			return novaResp.Output.Message.Content[0].Text, nil
 		}
 		return "", fmt.Errorf("no content found in response")
 	}
 
-	// If unmarshaling into the success structure fails, try to unmarshal into the error structure
+	// If unmarshaling into the success structure fails, try to unmarshal into the error structure.
 	var errorResp bedrockErrorResponse
 	if err := json.Unmarshal(responseBodyBytes, &errorResp); err == nil {
 		return "", fmt.Errorf("model error (%s): %s", errorResp.Type, errorResp.Message)
 	}
 
-	// If both fail, return a generic error with the raw response body
+	// If both fail, return a generic error with the raw response body.
 	return "", fmt.Errorf("failed to unmarshal response body: %s", string(responseBodyBytes))
 }
 
 // ChatStream sends a streaming chat request to the Amazon Bedrock API using the Messages API format.
+// It streams response chunks to the provided channel.
 func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, userPrompt string, responseChan chan<- string) error {
 	// Note: The caller is responsible for closing the responseChan.
 
+	// Create a new Bedrock client.
 	client, err := newBedrockClient(ctx, p.Profile)
 	if err != nil {
 		return fmt.Errorf("error creating bedrock client: %w", err)
 	}
 
-	// Construct user message
+	// Construct the user message for the API request.
 	messages := []novaMessage{
 		{
 			Role: "user",
@@ -198,13 +218,14 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 		},
 	}
 
-	// Construct system prompt as a slice of structs, only if it's not empty.
+	// Construct the system prompt as a slice of structs, only if it's not empty.
 	var systemContent []novaSystemPrompt
 	if systemPromptText != "" {
 		systemContent = append(systemContent, novaSystemPrompt{Text: systemPromptText})
 	}
 
-	// Initialize InferenceConfig directly in the struct literal.
+	// Build the request body for the InvokeModelWithResponseStream API call.
+	// InferenceConfig is initialized directly with default values.
 	reqBody := novaMessagesAPIRequest{
 		SchemaVersion: "messages-v1",
 		Messages:      messages,
@@ -222,6 +243,7 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 		return fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
+	// Invoke the Bedrock model with streaming response.
 	output, err := client.InvokeModelWithResponseStream(ctx, &bedrockruntime.InvokeModelWithResponseStreamInput{
 		ModelId:     aws.String(p.Profile.Model),
 		ContentType: aws.String("application/json"),
@@ -231,10 +253,12 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 		return fmt.Errorf("failed to invoke model with stream: %w", err)
 	}
 
+	// Process the streaming events.
 	stream := output.GetStream()
 	for event := range stream.Events() {
 		select {
 		case <-ctx.Done():
+			// If context is cancelled, close the stream and return the context error.
 			stream.Close()
 			return ctx.Err()
 		default:
@@ -243,12 +267,16 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 		switch v := event.(type) {
 		case *types.ResponseStreamMemberChunk:
 			var chunk novaMessagesAPIStreamChunk
+			// Unmarshal the chunk bytes into the streaming response structure.
 			if err := json.Unmarshal(v.Value.Bytes, &chunk); err != nil {
+				// Log the error but continue processing, as some chunks might be malformed or unexpected.
 				fmt.Fprintf(os.Stderr, "Error unmarshaling stream chunk: %v\n", err)
 				continue
 			}
+			// Send the text content to the response channel.
 			responseChan <- chunk.ContentBlockDelta.Delta.Text
 		// Handle other event types if necessary.
+			// For example, *types.ResponseStreamMemberContentBlockStart, *types.ResponseStreamMemberContentBlockStop, etc.
 			// fmt.Fprintf(os.Stderr, "unhandled stream event type: %T\n", v)
 		}
 	}

@@ -29,7 +29,10 @@ import (
 
 
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command for the llm-cli application.
+// It defines the application's name, version, short description, and long description.
+// rootCmdはllm-cliアプリケーションのベースコマンドです。
+// アプリケーション名、バージョン、短い説明、長い説明を定義します。
 var rootCmd = &cobra.Command{
 	Use:   "llm-cli",
 	Version: "ver.0.0.5",
@@ -44,13 +47,12 @@ Key Features:
 - Receive streaming responses for real-time interaction.
 
 This tool simplifies the process of experimenting with and utilizing different LLMs directly from your command line.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// This is called by main.main() and should only be called once.
+// Executeは全ての子コマンドをルートコマンドに追加し、フラグを適切に設定します。
+// これはmain.main()から呼び出され、一度だけ呼び出されるべきです。
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -58,9 +60,11 @@ func Execute() {
 	}
 }
 
+// init function is called before main.
+// It's used to define flags and configuration settings for the root command.
+// init関数はmainの前に呼び出されます。
+// ルートコマンドのフラグと設定を定義するために使用されます。
 func init() {
-	// Here you will define your flags and configuration settings.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 

@@ -1,18 +1,36 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+Copyright © 2025 magifd2
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 package cmd
 
 import (
 	"fmt"
-	"os"
+	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
 )
 
-// setCmd represents the set command
+// setCmd represents the 'profile set' command.
+// This command allows users to set a specific configuration value for the currently active profile.
 var setCmd = &cobra.Command{
 	Use:   "set [key] [value]",
 	Short: "Set a value in the current profile",
@@ -34,6 +52,8 @@ var setCmd = &cobra.Command{
 	},
 }
 
+// setProfileValue updates a specific key-value pair in the currently active profile.
+// It handles different configuration keys and returns an error for unknown keys.
 func setProfileValue(key, value string) error {
 	cfg, err := config.Load()
 	if err != nil {
@@ -77,6 +97,7 @@ func setProfileValue(key, value string) error {
 	return nil
 }
 
+// init function registers the setCmd with the profileCmd.
 func init() {
 	profileCmd.AddCommand(setCmd)
 }
