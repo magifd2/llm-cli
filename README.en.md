@@ -250,3 +250,7 @@ This project was developed with Google's AI assistant "Gemini" as a coding partn
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Security
+
+For information on how to report security vulnerabilities, please refer to our [Security Policy](./SECURITY.md).
