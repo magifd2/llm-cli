@@ -53,9 +53,8 @@ For future development plans and roadmap, please refer to the [Development Plan]
 
 ### Documentation Principles
 
-- **Language Policy**: All documentation will be written in Japanese first (as the primary source of truth) and then translated into English.
-  - The English version should include a note indicating it is a translation and that the Japanese version takes precedence in case of discrepancies.
-- **Scope**: Maintain both user-facing documents (e.g., `README`) and developer-facing documents (e.g., `DEVELOPING_PROVIDERS.md`).
+- **Language Policy**: The primary documentation will be in English (e.g., `README.md`, `BUILD.md`, `CHANGELOG.md`). Other languages (e.g., Japanese) will be provided as auxiliary documentation with a language suffix (e.g., `README.ja.md`).
+- **Scope**: Maintain both user-facing documents (e.g., `README.md`) and developer-facing documents (e.g., `CONTRIBUTING.md`).
 - **Maintenance**: When a feature is changed or added, ensure all relevant documentation is updated accordingly.
 
 ### File and Directory Operations
