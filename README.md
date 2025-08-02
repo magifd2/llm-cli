@@ -222,6 +222,7 @@ Sends a prompt to the currently active LLM.
 | `--system-prompt`    | `-P`      | An optional system-level instruction for the model.         |
 | `--system-prompt-file`| `-F`      | Path to a file containing the system prompt.                |
 | `--stream`           |           | Whether to display the response as a real-time stream.      |
+| `--profile`          |           | Use a specific profile for this command (overrides current active profile) |
 
 *If no prompt flag is provided, the first positional argument is used as the prompt. If that is also missing, input is read from stdin.*
 
