@@ -295,6 +295,7 @@ llm-cli profile check
 | `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`                                              |
 | `show`     | 特定のプロファイルの詳細（制限設定を含む）を表示します。`llm-cli profile show [profile-name]`        |
 | `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開いて手動編集します。                            |
+| `check`    | 設定プロファイルをチェックし、デフォルト設定の更新を提案します。                                      |
 
 ## コントリビューションと開発
 

@@ -296,6 +296,7 @@ Manages configuration profiles.
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`                                              |
 | `show`     | Shows all details of a specific profile, including limits. `llm-cli profile show [profile-name]`        |
 | `edit`     | Opens the `config.json` file in your default text editor for manual changes.                            |
+| `check`    | Checks and migrates configuration profiles, offering to update default settings.                        |
 
 ## Contributing & Development
 
