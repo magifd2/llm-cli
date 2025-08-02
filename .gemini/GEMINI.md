@@ -78,3 +78,31 @@ For future development plans and roadmap, please refer to the [Development Plan]
 
 - Use Go Modules for dependency management.
 - Run `go mod tidy` after adding or removing dependencies to ensure `go.mod` and `go.sum` are up-to-date.
+
+## Additional Development Principles: Self-Discipline for Robustness and Maintainability
+Learning from past failures and to prevent future breakdowns, the following principles must be strictly adhered to in all development and refactoring work.
+
+1. Testability First Principle
+* Always prioritize practical "ease of testing" over theoretical "beauty."
+* Even if a design pattern (e.g., self-registration in init()) appears clean and extensible, its adoption is prohibited in principle if it significantly complicates unit testing.
+* Always ask "How do I test this code?" and do not write code for which you cannot answer. Easily testable code is inherently loosely coupled and easy to understand.
+
+2. Implicit is Dangerous Principle
+* Prohibit "implicit" or "magical" implementations such as changes to global state in init() functions or behavior changes simply by importing a package.
+* Dependency Injection must always be done explicitly, for example, through function arguments. This makes code behavior traceable and facilitates mocking in tests.
+
+3. Redefinition and Compliance Obligation for "Major Refactoring"
+Any change that falls under even one of the following categories is considered a "Major Refactoring" and requires presenting a detailed development plan, including scope of impact and testing plan, and obtaining approval before starting work.
+* Changes to Initialization Logic: Changes related to init() functions, global variables, or package initialization order.
+* Changes to Core Interfaces: Changes to the signature of central interfaces in the system, such as `Provider`.
+* Widespread Impact: If changes require modifications across three or more packages to be completed.
+* Introduction of Cross-Cutting Concerns: Adding or changing features that affect multiple components, such as authentication, logging, or caching.
+
+4. Safe Refactoring Protocol
+Even if a change does not qualify as a "Major Refactoring," the following steps must be strictly followed when modifying core logic. This is an essential procedure to prevent breakdowns.
+1. [Establish Baseline]: Commit a stable state where all tests pass immediately before starting work. Commit message: `refactor: Start refactoring X`
+2. [Minimum Unit Change]: Make code changes in the smallest possible units (e.g., extract one function, add one variable).
+3. [Immediate Testing]: Immediately run `make test` after making a change.
+   * If successful: Commit the change immediately (`feat: Introduce Y` / `refactor: Extract Z`). Then return to step 2.
+   * If failed: Discard all changes immediately (`git reset --hard`). Do not modify other code to make the test pass. Recognize that test failures are a danger signal indicating "design is wrong" and fundamentally rethink the approach.
+4. [Completion]: Achieve the final goal by accumulating small commits.
