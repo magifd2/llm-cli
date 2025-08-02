@@ -47,6 +47,7 @@ Key Features:
 - Receive streaming responses for real-time interaction.
 
 This tool simplifies the process of experimenting with and utilizing different LLMs directly from your command line.`,
+	SilenceUsage: true, // Suppress usage message on error
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

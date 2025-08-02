@@ -2,6 +2,12 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Fix: CLI Error-Handling Behavior)
+
+- **Problem**: It was observed that when a command like `prompt` failed due to a runtime error (e.g., an API error or invalid input), the application would print the full usage/help text along with the error message. This was confusing and unnecessary.
+- **Analysis**: This behavior is the default for the Cobra library, which displays help on any error returned from a command's `RunE` function.
+- **Solution**: Set `SilenceUsage: true` on the `rootCmd` in `cmd/root.go`. This flag instructs Cobra to suppress the usage message on error, resulting in a cleaner and more user-friendly error display that only shows the relevant error message.
+
 ## 2025-08-03 (Feature: Add Configurable Size Limits for DoS Protection)
 
 - **Objective**: To protect users from accidental high costs and prevent the application from crashing due to excessively large inputs or outputs.
