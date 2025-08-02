@@ -12,13 +12,52 @@
 
 ## Installation
 
-1.  **Download the Binary**: Go to the [Releases page](https://github.com/magifd2/llm-cli/releases) of the project repository.
-2.  Download the appropriate binary for your operating system and architecture.
-3.  **Place it in your PATH**: Move the downloaded executable to a directory included in your system's `PATH` (e.g., `/usr/local/bin` on macOS/Linux or a custom directory on Windows).
-4.  **Make it Executable**: On macOS and Linux, you may need to grant execute permissions:
+`llm-cli` can be easily installed using the provided `Makefile`.
+
+### Using `make install`
+
+This method builds the `llm-cli` binary and installs it to a specified directory, along with the Zsh shell completion script.
+
+*   **Default Installation (System-wide):**
+    To install `llm-cli` to `/usr/local/bin` (requires `sudo`):
     ```bash
-    chmod +x /path/to/your/llm-cli
+    sudo make install
     ```
+
+*   **User-local Installation:**
+    To install `llm-cli` to `~/bin` (recommended for non-root users, ensure `~/bin` is in your `PATH`):
+    ```bash
+    make install PREFIX=~
+    ```
+
+*   **Custom Directory Installation:**
+    To install `llm-cli` to a custom directory (e.g., `/opt/llm-cli/bin`):
+    ```bash
+    sudo make install PREFIX=/opt/llm-cli
+    ```
+
+After installation, for Zsh users, you might need to run `compinit` or restart your shell for the completion script to take effect.
+
+### Uninstallation
+
+To uninstall `llm-cli` and its completion script, use `make uninstall` with the same `PREFIX` used during installation.
+
+*   **Default Uninstallation:**
+    ```bash
+    sudo make uninstall
+    ```
+
+*   **User-local Uninstallation:**
+    ```bash
+    make uninstall PREFIX=~
+    ```
+
+*   **Custom Directory Uninstallation:**
+    ```bash
+    sudo make uninstall PREFIX=/opt/llm-cli
+    ```
+
+**Note:** The uninstallation process does NOT remove your configuration files located at `~/.config/llm-cli/config.json`.
 
 ## Quick Start
 
@@ -199,6 +238,8 @@ Manages configuration profiles.
 ## Contributing & Development
 
 Contributions, such as adding new features or fixing bugs, are welcome.
+
+**Note for macOS Developers:** When building on macOS, `make build` will automatically produce a universal binary (supporting both `amd64` and `arm64` architectures) to ensure broader compatibility.
 
 If you are interested in adding a new LLM provider, please see the [Provider Development Guide](./DEVELOPING_PROVIDERS.en.md).
 
