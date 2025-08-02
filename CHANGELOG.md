@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## v0.0.7 - 2025-08-03
+
 ### ✨ Features
 *   **DoS Protection via Size Limits**: Implemented configurable input and output size limits to prevent accidental resource exhaustion.
     *   Added a new `limits` object to profiles in `config.json`.
