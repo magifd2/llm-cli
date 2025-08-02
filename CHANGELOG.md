@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## [Unreleased]
+
 ## v0.0.8 - 2025-08-03
 
 ### ✨ Features
@@ -15,8 +17,6 @@
     *   Modified `readAndProcessStream` to stop reading input once the `MaxPromptSizeBytes` limit is reached, even in "warn" mode, preventing large files from being fully loaded into memory.
     *   Updated `truncateStringByBytes` to be UTF-8 aware, ensuring that string truncation for size limiting does not corrupt multi-byte characters.
 *   **Configuration Loading Consistency**: Ensured `Limits` struct is always initialized with default values when loading configuration, even if not explicitly present in the config file. This guarantees consistent behavior across all profiles.
-
-## [Unreleased]
 
 
 ## v0.0.7 - 2025-08-03
