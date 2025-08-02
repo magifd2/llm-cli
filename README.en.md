@@ -241,7 +241,7 @@ Contributions, such as adding new features or fixing bugs, are welcome.
 
 **Note for macOS Developers:** When building on macOS, `make build` will automatically produce a universal binary (supporting both `amd64` and `arm64` architectures) to ensure broader compatibility.
 
-If you are interested in adding a new LLM provider, please see the [Provider Development Guide](./DEVELOPING_PROVIDERS.en.md).
+If you are interested in contributing, please see the [Contributing Guide](./CONTRIBUTING.md).
 
 ## Acknowledgements
 
