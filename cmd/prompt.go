@@ -22,12 +22,15 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/briandowns/spinner"
 	"github.com/magifd2/llm-cli/internal/config"
@@ -37,33 +40,12 @@ import (
 )
 
 // promptCmd represents the 'prompt' command.
-// This command sends a user prompt to the configured LLM provider and prints the response.
 var promptCmd = &cobra.Command{
 	Use:   "prompt",
 	Short: "Send a prompt to the LLM",
-	Long:  `Sends a prompt to the configured LLM and prints the response.`, // Corrected: Removed unnecessary escaping of backticks.
+	Long:  `Sends a prompt to the configured LLM and prints the response.`, // Corrected: Removed unnecessary escaping of backticks
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// 1. Get prompt values from flags.
-		userPrompt, _ := cmd.Flags().GetString("user-prompt")
-		userPromptFile, _ := cmd.Flags().GetString("user-prompt-file")
-		systemPrompt, _ := cmd.Flags().GetString("system-prompt")
-		systemPromptFile, _ := cmd.Flags().GetString("system-prompt-file")
-
-		// 2. Load prompts from direct input, file, or stdin.
-		userPromptStr := loadPrompt(userPrompt, userPromptFile)
-		systemPromptStr := loadPrompt(systemPrompt, systemPromptFile)
-
-		// If no user prompt is provided via flags, check for positional arguments.
-		if userPromptStr == "" && len(args) > 0 {
-			userPromptStr = args[0] // Take the first positional argument as the prompt.
-		}
-
-		// If userPromptStr is still empty, it's an error as a user prompt is mandatory.
-		if userPromptStr == "" {
-			return fmt.Errorf("no user prompt provided. Please use --user-prompt, --user-prompt-file, provide a positional argument, or pipe input to stdin")
-		}
-
-		// 3. Load configuration and determine the active LLM provider.
+		// 1. Load configuration and determine the active profile.
 		cfg, err := config.Load()
 		if err != nil {
 			return fmt.Errorf("error loading config: %w", err)
@@ -73,7 +55,6 @@ var promptCmd = &cobra.Command{
 		var activeProfile config.Profile
 		var ok bool
 
-		// If a specific profile is requested via flag, use it; otherwise, use the current active profile.
 		if profileName != "" {
 			activeProfile, ok = cfg.Profiles[profileName]
 			if !ok {
@@ -86,40 +67,48 @@ var promptCmd = &cobra.Command{
 			}
 		}
 
-		// 4. Apply limits
-		if activeProfile.Limits.Enabled {
-			onInputExceeded := activeProfile.Limits.OnInputExceeded
-			if cmd.Flags().Changed("on-input-exceeded") {
-				onInputExceeded, _ = cmd.Flags().GetString("on-input-exceeded")
-			}
-
-			promptSize := int64(len(userPromptStr) + len(systemPromptStr))
-			if promptSize > activeProfile.Limits.MaxPromptSizeBytes {
-				if onInputExceeded == "stop" {
-					return fmt.Errorf("input size (%d bytes) exceeds the limit of %d bytes", promptSize, activeProfile.Limits.MaxPromptSizeBytes)
-				} else if onInputExceeded == "warn" {
-					fmt.Fprintf(os.Stderr, "Warning: Input size (%d bytes) exceeds the limit of %d bytes. Truncating...\n", promptSize, activeProfile.Limits.MaxPromptSizeBytes)
-					// Truncate the user prompt
-					combinedLen := int64(len(systemPromptStr))
-					if combinedLen < activeProfile.Limits.MaxPromptSizeBytes {
-						userPromptStr = userPromptStr[:activeProfile.Limits.MaxPromptSizeBytes-combinedLen]
-					} else {
-						userPromptStr = ""
-					}
-				}
-			}
+		// 2. Determine limit settings from profile and flags.
+		limits := activeProfile.Limits
+		onInputExceeded := limits.OnInputExceeded
+		if cmd.Flags().Changed("on-input-exceeded") {
+			onInputExceeded, _ = cmd.Flags().GetString("on-input-exceeded")
+		}
+		onOutputExceeded := limits.OnOutputExceeded
+		if cmd.Flags().Changed("on-output-exceeded") {
+			onOutputExceeded, _ = cmd.Flags().GetString("on-output-exceeded")
 		}
 
+		// 3. Load and validate prompts.
+		userPrompt, _ := cmd.Flags().GetString("user-prompt")
+		userPromptFile, _ := cmd.Flags().GetString("user-prompt-file")
+		systemPrompt, _ := cmd.Flags().GetString("system-prompt")
+		systemPromptFile, _ := cmd.Flags().GetString("system-prompt-file")
+
+		userPromptStr, err := loadPrompt(userPrompt, userPromptFile, limits, onInputExceeded)
+		if err != nil {
+			return err
+		}
+		systemPromptStr, err := loadPrompt(systemPrompt, systemPromptFile, limits, onInputExceeded)
+		if err != nil {
+			return err
+		}
+
+		if userPromptStr == "" && len(args) > 0 {
+			userPromptStr = args[0]
+		}
+
+		if userPromptStr == "" {
+			return fmt.Errorf("no user prompt provided")
+		}
+
+		// 4. Initialize provider.
 		var provider llm.Provider
-		// Initialize the appropriate LLM provider based on the active profile's provider type.
 		switch activeProfile.Provider {
 		case "ollama":
 			provider = &llm.OllamaProvider{Profile: activeProfile}
 		case "openai":
 			provider = &llm.OpenAIProvider{Profile: activeProfile}
 		case "bedrock":
-			// For Bedrock, check the model ID to determine if it's a Nova model.
-			// If it's a Nova model, use NovaBedrockProvider; otherwise, use a mock provider for unsupported models.
 			if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
 				provider = &llm.NovaBedrockProvider{Profile: activeProfile}
 			} else {
@@ -129,151 +118,215 @@ var promptCmd = &cobra.Command{
 		case "vertexai":
 			provider = &llm.VertexAIProvider{Profile: activeProfile}
 		default:
-			// If the provider is not recognized, default to a mock provider and issue a warning.
 			fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
 			provider = &llm.MockProvider{}
 		}
 
-		// 5. Get and print the LLM response, either streaming or as a single response.
+		// 5. Execute and get response.
 		stream, _ := cmd.Flags().GetBool("stream")
 		if stream {
-			var wg sync.WaitGroup
-			// Use a buffered channel to prevent the goroutine from blocking if the main goroutine is slow.
-			errChan := make(chan error, 1)
-			responseChan := make(chan string)
-
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				defer close(responseChan)
-				err := provider.ChatStream(cmd.Context(), systemPromptStr, userPromptStr, responseChan)
-				if err != nil {
-					errChan <- err
-				}
-			}()
-
-			var totalResponseSize int64
-			// Read from the response channel until it's closed and print tokens.
-			for token := range responseChan {
-				if activeProfile.Limits.Enabled {
-					onOutputExceeded := activeProfile.Limits.OnOutputExceeded
-					if cmd.Flags().Changed("on-output-exceeded") {
-						onOutputExceeded, _ = cmd.Flags().GetString("on-output-exceeded")
-					}
-
-					totalResponseSize += int64(len(token))
-					if totalResponseSize > activeProfile.Limits.MaxResponseSizeBytes {
-						if onOutputExceeded == "stop" {
-							return fmt.Errorf("\nError: Output size exceeded the limit of %d bytes.", activeProfile.Limits.MaxResponseSizeBytes)
-						} else if onOutputExceeded == "warn" {
-							fmt.Fprintf(os.Stderr, "\nWarning: Output size exceeded the limit of %d bytes. Truncating...\n", activeProfile.Limits.MaxResponseSizeBytes)
-							break
-						}
-					}
-				}
-				fmt.Print(token)
-			}
-
-			// Wait for the goroutine to finish completely and check for any errors.
-			wg.Wait()
-			close(errChan)
-
-			if err := <-errChan; err != nil {
-				return fmt.Errorf("\nError: %w", err)
-			}
-
-			fmt.Println() // Print a final newline after the stream ends for clean output.
+			return handleStreamResponse(cmd, provider, systemPromptStr, userPromptStr, activeProfile, onOutputExceeded)
 		} else {
-			var response string
-			var err error
-
-			// isatty.IsTerminal で、標準出力がターミナルかどうかを判定
-			if isatty.IsTerminal(os.Stdout.Fd()) {
-				// 【ターミナルの場合：スピナーを表示】
-				s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
-				s.Suffix = "  Generating response..."
-				s.Start()
-
-				// 非同期でレスポンスを取得
-				done := make(chan bool)
-				go func() {
-					response, err = provider.Chat(systemPromptStr, userPromptStr)
-					done <- true
-				}()
-				<-done
-
-				s.Stop()
-			} else {
-				// 【リダイレクト/パイプの場合：スピナーを表示しない】
-				// 単純にレスポンスを待つ
-				response, err = provider.Chat(systemPromptStr, userPromptStr)
-			}
-
-			if err != nil {
-				return fmt.Errorf("Error getting response: %w", err)
-			}
-
-			if activeProfile.Limits.Enabled {
-				onOutputExceeded := activeProfile.Limits.OnOutputExceeded
-				if cmd.Flags().Changed("on-output-exceeded") {
-					onOutputExceeded, _ = cmd.Flags().GetString("on-output-exceeded")
-				}
-
-				if int64(len(response)) > activeProfile.Limits.MaxResponseSizeBytes {
-					if onOutputExceeded == "stop" {
-						return fmt.Errorf("Error: Output size (%d bytes) exceeds the limit of %d bytes.", len(response), activeProfile.Limits.MaxResponseSizeBytes)
-					} else if onOutputExceeded == "warn" {
-						fmt.Fprintf(os.Stderr, "Warning: Output size (%d bytes) exceeds the limit of %d bytes. Truncating...\n", len(response), activeProfile.Limits.MaxResponseSizeBytes)
-						response = response[:activeProfile.Limits.MaxResponseSizeBytes]
-					}
-				}
-			}
-			fmt.Println(response)
+			return handleSingleResponse(provider, systemPromptStr, userPromptStr, activeProfile, onOutputExceeded)
 		}
-		return nil
 	},
 }
 
-// loadPrompt determines the prompt string based on direct input, file path, or stdin.
-// It prioritizes direct value, then file content (supporting '-' for stdin), and finally checks for piped stdin.
-func loadPrompt(directValue, filePath string) string {
+func handleSingleResponse(provider llm.Provider, systemPrompt, userPrompt string, profile config.Profile, onOutputExceeded string) error {
+	var response string
+	var err error
+
+	var s *spinner.Spinner
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		s = spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+		s.Suffix = "  Generating response..."
+		s.Start()
+	}
+
+	response, err = provider.Chat(systemPrompt, userPrompt)
+
+	if s != nil {
+		s.Stop()
+	}
+
+	if err != nil {
+		return fmt.Errorf("error getting response: %w", err)
+	}
+
+	// Sanitize and check output size limit.
+	if profile.Limits.Enabled {
+		response = sanitizeUTF8(response, "output")
+		if int64(len(response)) > profile.Limits.MaxResponseSizeBytes {
+			if onOutputExceeded == "stop" {
+				return fmt.Errorf("output size (%d bytes) exceeds the limit of %d bytes", len(response), profile.Limits.MaxResponseSizeBytes)
+			} else if onOutputExceeded == "warn" {
+				fmt.Fprintf(os.Stderr, "Warning: Output size (%d bytes) exceeds the limit of %d bytes. Truncating...\n", len(response), profile.Limits.MaxResponseSizeBytes)
+				response = truncateStringByBytes(response, profile.Limits.MaxResponseSizeBytes)
+			}
+		}
+	}
+
+	fmt.Println(response)
+	return nil
+}
+
+func handleStreamResponse(cmd *cobra.Command, provider llm.Provider, systemPrompt, userPrompt string, profile config.Profile, onOutputExceeded string) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, 1)
+	responseChan := make(chan string)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer close(responseChan)
+		err := provider.ChatStream(cmd.Context(), systemPrompt, userPrompt, responseChan)
+		if err != nil {
+			errChan <- err
+		}
+	}()
+
+	var totalResponseSize int64
+	var truncated bool
+	for token := range responseChan {
+		sanitizedToken := sanitizeUTF8(token, "output")
+
+		if profile.Limits.Enabled && !truncated {
+			if totalResponseSize+int64(len(sanitizedToken)) > profile.Limits.MaxResponseSizeBytes {
+				if onOutputExceeded == "stop" {
+					return fmt.Errorf("\nError: Output size exceeded the limit of %d bytes", profile.Limits.MaxResponseSizeBytes)
+				} else if onOutputExceeded == "warn" {
+					remainingBytes := profile.Limits.MaxResponseSizeBytes - totalResponseSize
+					fmt.Print(truncateStringByBytes(sanitizedToken, remainingBytes))
+					fmt.Fprintf(os.Stderr, "\nWarning: Output size exceeded the limit of %d bytes. Truncating...\n", profile.Limits.MaxResponseSizeBytes)
+					truncated = true
+					break
+				}
+			}
+		}
+		totalResponseSize += int64(len(sanitizedToken))
+		fmt.Print(sanitizedToken)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	if err := <-errChan; err != nil {
+		return fmt.Errorf("\nError: %w", err)
+	}
+
+	if !truncated {
+		fmt.Println()
+	}
+	return nil
+}
+
+func loadPrompt(directValue, filePath string, limits config.Limits, onExceeded string) (string, error) {
 	if directValue != "" {
-		return directValue
+		return handlePromptData([]byte(directValue), "argument", limits, onExceeded)
 	}
 	if filePath != "" {
-		var content []byte
-		var err error
-		// If filePath is "-", read from stdin.
 		if filePath == "-" {
-			content, err = io.ReadAll(os.Stdin)
-		} else {
-			content, err = os.ReadFile(filePath)
+			return readAndProcessStream(os.Stdin, "stdin", limits, onExceeded)
 		}
+		file, err := os.Open(filePath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading prompt file: %v\n", err)
-			os.Exit(1)
+			return "", fmt.Errorf("error opening prompt file: %w", err)
 		}
-		return string(content)
+		defer file.Close()
+
+		stat, err := file.Stat()
+		if err != nil {
+			return "", fmt.Errorf("error getting file stats: %w", err)
+		}
+
+		if limits.Enabled && stat.Size() > limits.MaxPromptSizeBytes {
+			if onExceeded == "stop" {
+				return "", fmt.Errorf("input file size (%d bytes) exceeds the limit of %d bytes", stat.Size(), limits.MaxPromptSizeBytes)
+			} else if onExceeded == "warn" {
+				fmt.Fprintf(os.Stderr, "Warning: Input file size (%d bytes) exceeds the limit of %d bytes. Reading up to the limit...\n", stat.Size(), limits.MaxPromptSizeBytes)
+			}
+		}
+		return readAndProcessStream(file, fmt.Sprintf("file '%s'", filePath), limits, onExceeded)
 	}
-	// Check if stdin is being piped. This is a non-critical check.
+
 	stat, err := os.Stdin.Stat()
-	if err != nil {
-		// If Stat fails, it usually means stdin is not available or not a character device.
-		// We can ignore this error and return an empty string, as it's not a critical failure.
-		return ""
+	if err != nil || (stat.Mode()&os.ModeCharDevice) != 0 {
+		return "", nil // No pipe, no problem
 	}
 
-	// If stdin is not a character device, it means input is being piped.
-	if (stat.Mode() & os.ModeCharDevice) == 0 {
-		content, err := io.ReadAll(os.Stdin)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading from stdin: %v\n", err)
-			os.Exit(1)
+	return readAndProcessStream(os.Stdin, "stdin", limits, onExceeded)
+}
+
+func readAndProcessStream(r io.Reader, source string, limits config.Limits, onExceeded string) (string, error) {
+	reader := bufio.NewReader(r)
+	var buf bytes.Buffer
+	var totalBytes int64
+
+	for {
+		chunk := make([]byte, 4096)
+		n, err := reader.Read(chunk)
+		if n > 0 {
+			totalBytes += int64(n)
+			if limits.Enabled && totalBytes > limits.MaxPromptSizeBytes {
+				if onExceeded == "stop" {
+					return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
+				}
+				// For warn, we just stop reading and will truncate later
+				buf.Write(chunk[:n])
+				break
+			}
+			buf.Write(chunk[:n])
 		}
-		return string(content)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("error reading from %s: %w", source, err)
+		}
 	}
 
-	return ""
+	return handlePromptData(buf.Bytes(), source, limits, onExceeded)
+}
+
+func handlePromptData(data []byte, source string, limits config.Limits, onExceeded string) (string, error) {
+	// 1. Sanitize
+	sanitizedStr := sanitizeUTF8(string(data), source)
+
+	// 2. Check size and truncate if needed
+	if limits.Enabled && int64(len(sanitizedStr)) > limits.MaxPromptSizeBytes {
+		if onExceeded == "warn" {
+			// This case is for stdin that was read up to the buffer limit
+			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
+			return truncateStringByBytes(sanitizedStr, limits.MaxPromptSizeBytes), nil
+		}
+		// Stop case should have been handled earlier for files, but as a fallback for stdin
+		return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
+	}
+
+	return sanitizedStr, nil
+}
+
+func sanitizeUTF8(s, source string) string {
+	if !utf8.ValidString(s) {
+		fmt.Fprintf(os.Stderr, "Warning: Invalid UTF-8 sequence detected in %s. Non-UTF-8 characters will be replaced.\n", source)
+		return strings.ToValidUTF8(s, "\uFFFD")
+	}
+	return s
+}
+
+func truncateStringByBytes(s string, maxBytes int64) string {
+	if int64(len(s)) <= maxBytes {
+		return s
+	}
+	// Find the last rune start position that is within the limit
+	endIndex := 0
+	for i := range s {
+		if int64(i) > maxBytes {
+			return s[:endIndex]
+		}
+		endIndex = i
+	}
+	return s[:endIndex]
 }
 
 // init function registers the promptCmd with the rootCmd and defines its flags.
