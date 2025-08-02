@@ -248,6 +248,7 @@ Manages configuration profiles.
 |            | `--credentials-file <path>`: Path to GCP credentials file for Vertex AI                                  |
 | `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>` |
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`         |
+| `show`     | Shows details of a specific profile. `llm-cli profile show [profile-name]` |
 | `edit`     | Opens the `config.json` file in your default text editor.          |
 
 ## Contributing & Development

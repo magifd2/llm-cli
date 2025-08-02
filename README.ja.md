@@ -248,6 +248,7 @@ Vertex AIのGenAI SDKでは、システムプロンプトに直接対応する�
 |            | `--credentials-file <path>`: Vertex AIのGCPクレデンシャルファイルへのパス                                |
 | `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>` |
 | `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`     |
+| `show`     | 特定のプロファイルの詳細を表示します。`llm-cli profile show [profile-name]` |
 | `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開きます。     |
 
 ## コントリビューションと開発
