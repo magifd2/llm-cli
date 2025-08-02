@@ -1,108 +1,122 @@
-# Gemini Project Guidelines
+# **Gemini Project Guidelines**
 
-This document outlines the development and build rules specific to this project, intended for the Gemini agent.
+This document outlines the development and build rules specific to this project, intended for the Gemini agent. All development must strictly adhere to these principles to ensure the project's long-term quality, security, and maintainability.
 
-For a detailed history of development and key decisions, please refer to the [Development Log](DEVELOPMENT_LOG.md).
-For future development plans and roadmap, please refer to the [Development Plan](DEVELOPMENT_PLAN.md).
+For a detailed history of development and key decisions, please refer to the Development Log.  
+For future development plans and roadmap, please refer to the Development Plan.
 
-## Development Rules
+## **I. Core Philosophy & Overarching Principles**
 
-### Security First Principle (セキュリティ第一原則)
+*(哲学と最優先事項)*
 
-- **Security is the highest priority, overriding all other considerations such as functionality or performance. (セキュリティは、機能性やパフォーマンスといった他のいかなる考慮事項よりも優先される、絶対的な最優先事項である。)**
-- **All code, dependencies, and configurations must be reviewed for potential security vulnerabilities before being committed. (全てのコード、依存関係、設定は、コミットされる前に、潜在的なセキュリティ脆弱性についてレビューされなければならない。)**
-- **Never trust user input, including environment variables. All external inputs must be validated and sanitized to prevent injection attacks. (環境変数を含む、いかなるユーザー入力も信頼してはならない。全ての外部入力は、インジェクション攻撃を防ぐために検証され、無害化されなければならない。)**
-- **Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations. (APIキーや認証情報などの機密情報は、決してハードコードされたり、安全でない場所に保存されたりしてはならない。)**
+These are the absolute, non-negotiable principles that guide all other decisions.  
+(これらは他のすべての決定を導く、絶対的で交渉の余地のない原則です。)
 
-### Secure Development Lifecycle (セキュア開発ライフサイクル)
+### **I-1. Security First Principle (セキュリティ第一原則)**
 
-- **Threat Modeling at Design Phase (設計段階での脅威モデリング):** Before implementing a new feature, consider potential threats. For example, when adding a feature that interacts with the filesystem, evaluate risks like path traversal.
-- **Security-Focused Code Reviews (セキュリティを重視したコードレビュー):** All code reviews must include a specific check for security vulnerabilities. Do not approve pull requests that have not been reviewed from a security perspective.
-- **Safe Testing Practices (安全なテストの実施):** When testing for vulnerabilities, use harmless proof-of-concept payloads. Before running tests that involve external inputs like environment variables, always inspect their contents first.
-- **Dependency Scanning (依存関係のスキャン):** Regularly scan project dependencies for known vulnerabilities using tools like `govulncheck`.
+* Security is the highest priority, overriding all other considerations such as functionality or performance. All code, dependencies, and configurations must be reviewed for potential security vulnerabilities before being committed.  
+* Never trust user input, including environment variables. All external inputs must be validated and sanitized to prevent injection attacks.  
+* Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations. Configuration files containing sensitive information must be stored with restrictive permissions (e.g., 0600 for files, 0700 for directories).
 
-### Code Style and Formatting
+### **I-2. Testability First Principle (テスト容易性第一の原則)**
 
-- Adhere to standard Go formatting (`gofmt`).
-- Follow idiomatic Go practices.
-- Keep functions concise and focused on a single responsibility.
+* Prioritize practical "testability" over theoretical "beauty" in design. If a design pattern makes unit testing significantly difficult (e.g., self-registration via init()), it is forbidden.  
+* Always ask, "How will I test this code?" Code that cannot be answered should not be written. Easily testable code is inherently loosely coupled and easy to understand.
 
-### Concurrency Best Practices
-- When implementing asynchronous processes or communication between goroutines, prioritize standard Go concurrency patterns like `sync.WaitGroup` and buffered channels.
-- Avoid overly complex `select` controls for state management to prevent race conditions and ensure robust error handling.
+## **II. Design & Implementation Principles**
 
-### Testing Principles
+*(設計と実装の原則)*
 
-- Write unit tests for new features and bug fixes.
-- For critical bug fixes, especially those related to core logic like API interaction or concurrency, add a regression test to prevent recurrence.
-- Ensure tests cover critical paths and edge cases.
-- Use `make test` to run tests.
+These principles govern how code should be designed and written.  
+(これらはコードをどのように設計し、書くべきかを規定する原則です。)
 
-### Linting
-- Use `golangci-lint` for static code analysis.
-- Ensure all code passes lint checks before committing.
+### **II-1. Explicit is Better than Implicit (暗黙的な挙動の禁止)**
 
-### Commit Message Conventions
+* Forbid "magical" implementations like changing global state in init() or behavior that changes merely by importing a package.  
+* Dependency Injection must always be done explicitly (e.g., via function arguments). This makes code behavior traceable and easy to mock in tests.
 
-- Use the Conventional Commits specification (e.g., `feat:`, `fix:`, `refactor:`, `docs:`).
-- For multi-line commit messages, write the message in a temporary file (e.g., `.git/COMMIT_MSG`) and use `git commit -F <file>` to avoid shell interpretation errors. This is the standard procedure.
-- Explain *why* a change was made, not just *what* was changed.
+### **II-2. Code Style and Quality (コードのスタイルと品質)**
 
-### Bug Fixes
-- Identify and address the root cause of bugs, avoiding temporary or superficial fixes.
+* Adhere to standard Go formatting (gofmt) and idiomatic Go practices.  
+* Keep functions concise and focused on a single responsibility.  
+* Identify and address the root cause of bugs, avoiding temporary or superficial fixes.
 
-### Documentation Principles
+### **II-3. Dependency Management (依存関係の管理)**
 
-- **Language Policy**: The primary documentation will be in English (e.g., `README.md`, `BUILD.md`, `CHANGELOG.md`). Other languages (e.g., Japanese) will be provided as auxiliary documentation with a language suffix (e.g., `README.ja.md`).
-- **Scope**: Maintain both user-facing documents (e.g., `README.md`) and developer-facing documents (e.g., `CONTRIBUTING.md`).
-- **Maintenance**: When a feature is changed or added, ensure all relevant documentation is updated accordingly.
+* Use Go Modules for dependency management.  
+* Run go mod tidy after adding or removing dependencies to ensure go.mod and go.sum are up-to-date.  
+* Regularly scan project dependencies for known vulnerabilities using make vulncheck.
 
-### File and Directory Operations
-- When deleting or modifying files/directories, always use absolute paths instead of relative paths to prevent unintended operations.
+## **III. Development Process & Workflow**
 
-## Build Rules
+*(開発プロセスとワークフロー)*
 
-### Makefile Usage
+These rules define the mandatory process for all development activities.  
+(これらはすべての開発活動における必須のプロセスを定義するルールです。)
 
-- Always use `make` commands for building, testing, and cleaning the project.
+### **III-1. Definition of "Major Refactoring" (「大規模改修」の定義)**
 
-### Build Commands and Outputs
+Any change that meets one or more of the following criteria is considered a "Major Refactoring" and requires prior approval of a detailed development plan, including impact analysis and testing strategy.
 
-- `make build`: Builds a binary for the current OS and architecture. Output: `bin/<OS>-<ARCH>/llm-cli`.
-- `make cross-compile`: Builds binaries for multiple OS/architectures and creates compressed archives. Output: `bin/llm-cli-<platform>.tar.gz` or `.zip`.
-- `make all`: Executes both `make build` and `make cross-compile`, generating all binaries and archives.
-- `make test`: Runs all project tests.
-- `make clean`: Removes build artifacts and caches.
+* **Changes to Initialization Logic**: Any modification involving init() functions, global variables, or package initialization order.  
+* **Changes to Core Interfaces**: Modifying the signature of a central interface like Provider.  
+* **Widespread Impact**: A change that requires modifications across three or more packages.  
+* **Introduction of Cross-Cutting Concerns**: Adding or changing functionality that affects multiple components, such as authentication, logging, or caching.
 
-### Dependency Management
+### **III-2. Safe Refactoring Protocol (安全なリファクタリング規約)**
 
-- Use Go Modules for dependency management.
-- Run `go mod tidy` after adding or removing dependencies to ensure `go.mod` and `go.sum` are up-to-date.
+Even for changes not classified as "Major Refactoring," the following protocol must be strictly followed to prevent system-wide failure.
 
-## Additional Development Principles: Self-Discipline for Robustness and Maintainability
-Learning from past failures and to prevent future breakdowns, the following principles must be strictly adhered to in all development and refactoring work.
+* **III-2.1.【Establish Baseline】**: Commit the stable, fully-tested state of the code before starting. Commit message: refactor: Start refactoring X.  
+* **III-2.2.【Make Minimal Changes】**: Make the smallest possible incremental change (e.g., extract one function, add one variable).  
+* **III-2.3.【Test Immediately】**: Run make test immediately after the change.  
+  * **On Success**: Commit the change immediately (feat: Introduce Y / refactor: Extract Z). Return to Step **III-2.2**.  
+  * **On Failure**: **Discard all changes immediately (git reset --hard).** Do not attempt to fix the test by modifying other code. A test failure is a critical signal that the **design approach is flawed** and must be re-evaluated from scratch.  
+* **III-2.4.【Complete】**: Achieve the final goal through a series of small, safe, and tested commits.
 
-1. Testability First Principle
-* Always prioritize practical "ease of testing" over theoretical "beauty."
-* Even if a design pattern (e.g., self-registration in init()) appears clean and extensible, its adoption is prohibited in principle if it significantly complicates unit testing.
-* Always ask "How do I test this code?" and do not write code for which you cannot answer. Easily testable code is inherently loosely coupled and easy to understand.
+### **III-3. Commit Message Conventions (コミットメッセージの規約)**
 
-2. Implicit is Dangerous Principle
-* Prohibit "implicit" or "magical" implementations such as changes to global state in init() functions or behavior changes simply by importing a package.
-* Dependency Injection must always be done explicitly, for example, through function arguments. This makes code behavior traceable and facilitates mocking in tests.
+* Use the Conventional Commits specification (e.g., feat:, fix:, refactor:, docs:).  
+* Explain *why* a change was made, not just *what* was changed.
 
-3. Redefinition and Compliance Obligation for "Major Refactoring"
-Any change that falls under even one of the following categories is considered a "Major Refactoring" and requires presenting a detailed development plan, including scope of impact and testing plan, and obtaining approval before starting work.
-* Changes to Initialization Logic: Changes related to init() functions, global variables, or package initialization order.
-* Changes to Core Interfaces: Changes to the signature of central interfaces in the system, such as `Provider`.
-* Widespread Impact: If changes require modifications across three or more packages to be completed.
-* Introduction of Cross-Cutting Concerns: Adding or changing features that affect multiple components, such as authentication, logging, or caching.
+### **III-4. Build and Linting (ビルドとリント)**
 
-4. Safe Refactoring Protocol
-Even if a change does not qualify as a "Major Refactoring," the following steps must be strictly followed when modifying core logic. This is an essential procedure to prevent breakdowns.
-1. [Establish Baseline]: Commit a stable state where all tests pass immediately before starting work. Commit message: `refactor: Start refactoring X`
-2. [Minimum Unit Change]: Make code changes in the smallest possible units (e.g., extract one function, add one variable).
-3. [Immediate Testing]: Immediately run `make test` after making a change.
-   * If successful: Commit the change immediately (`feat: Introduce Y` / `refactor: Extract Z`). Then return to step 2.
-   * If failed: Discard all changes immediately (`git reset --hard`). Do not modify other code to make the test pass. Recognize that test failures are a danger signal indicating "design is wrong" and fundamentally rethink the approach.
-4. [Completion]: Achieve the final goal by accumulating small commits.
+* Always use the provided Makefile for building, testing, and cleaning the project.  
+* Ensure all code passes lint checks (make lint) before committing.
+
+## **IV. Tooling & Operational Safety**
+
+*(ツール利用と操作の安全性)*
+
+These rules govern the safe use of development tools and file system operations to prevent irreversible errors.  
+(これらは不可逆的なエラーを防ぐため、開発ツールとファイルシステム操作の安全な利用法を規定するルールです。)
+
+### **IV-1. Safe Code Modification Protocol (安全なコード修正手順)**
+
+* **Problem**: The code replacement tool can be unreliable and may corrupt files.  
+* **Rule**: To prevent file corruption, all code modifications must follow a "diff-and-replace" workflow.  
+* **Process**:  
+  * **IV-1.1.** Generate the complete, modified content of the target file into a **temporary file** (e.g., original_filename.new).  
+  * **IV-1.2.** Execute a diff command between the original file and the new temporary file to verify the changes are exactly as intended.  
+  * **IV-1.3.** Only after visual confirmation of the diff, replace the original file with the temporary file using a mv command.
+
+### **IV-2. Safe File System Operations (安全なファイルシステム操作)**
+
+* **Problem**: Accidental deletion of unintended files due to incorrect path context.  
+* **Rule**: All commands that delete or modify files/directories (e.g., rm, mv) **must use absolute paths.**  
+* **Reason**: This prevents catastrophic errors resulting from operating in an unexpected current working directory. Relative paths are strictly forbidden for destructive operations.
+
+### **IV-3. Safe Git Commit Procedure (安全なGitコミット手順)**
+
+* **Problem**: Complex commit messages can be misinterpreted by the shell, leading to incorrect or failed commits.  
+* **Rule**: To prevent shell interpretation errors, commit messages **must be written to a temporary file first.**  
+* **Process**:  
+  * **IV-3.1.** Write the full commit message (including subject, body, and any special characters) to a temporary file (e.g., .git/COMMIT_MSG).  
+  * **IV-3.2.** Use the git commit -F .git/COMMIT_MSG command to apply the message from the file. Direct command-line commits with -m are forbidden for multi-line or complex messages.
+
+## **V. Documentation Principles**
+
+*(ドキュメンテーションの原則)*
+
+* **V-1. Language Policy**: The primary documentation will be in English (e.g., README.md). Other languages will be provided as auxiliary documentation with a language suffix (e.g., README.ja.md).  
+* **V-2. Maintenance**: When a feature is changed or added, ensure all relevant documentation (README.md, CHANGELOG.md, etc.) is updated accordingly.
