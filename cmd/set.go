@@ -60,8 +60,14 @@ func setProfileValue(key, value string) error {
 		profile.AWSAccessKeyID = value
 	case "aws_secret_access_key":
 		profile.AWSSecretAccessKey = value
+	case "project_id":
+		profile.ProjectID = value
+	case "location":
+		profile.Location = value
+	case "credentials_file":
+		profile.CredentialsFile = value
 	default:
-		return fmt.Errorf("unknown configuration key '%s'.\nAvailable keys: model, provider, endpoint, api_key, aws_region, aws_access_key_id, aws_secret_access_key", key)
+		return fmt.Errorf("unknown configuration key '%s'.\nAvailable keys: model, provider, endpoint, api_key, aws_region, aws_access_key_id, aws_secret_access_key, project_id, location, credentials_file", key)
 	}
 
 	cfg.Profiles[cfg.CurrentProfile] = profile
@@ -74,3 +80,5 @@ func setProfileValue(key, value string) error {
 func init() {
 	profileCmd.AddCommand(setCmd)
 }
+
+

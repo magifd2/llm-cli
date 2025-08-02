@@ -132,6 +132,37 @@ AWS IDには、Bedrockモデルを呼び出す権限が必要です。
 ```
 *注意: ベストプラクティスとして、`Resource` は必要な特定のモデルに限定することを強く推奨します。*
 
+#### 4. Google Cloud Vertex AI
+
+Google Cloud Vertex AIを利用するには、GCPプロジェクトの設定と認証情報の準備が必要です。
+
+**事前準備:**
+1.  Vertex AI を使用する Google Cloud Platform (GCP) プロジェクトが作成済みであること。
+2.  対象のGCPプロジェクトで **Vertex AI API** が有効になっていること。
+3.  サービスアカウントキーを作成し、**JSON** 形式でダウンロードします。このキーファイルは安全な場所に保管してください。
+    *   サービスアカウントには **「Vertex AI ユーザー」** ロールを付与します。
+
+**設定手順:**
+
+```bash
+# Vertex AI用に新しいプロファイルを追加（一括設定）
+llm-cli profile add my-vertex-ai \
+  --provider vertexai \
+  --model gemini-1.5-pro-001 \
+  --project-id "your-gcp-project-id" \
+  --location "us-central1" \
+  --credentials-file "~/path/to/your/service-account-key.json"
+
+# 新しく作成したプロファイルに切り替え
+llm-cli profile use my-vertex-ai
+```
+
+**注意:** `credentials-file` には、サービスアカウントキーのJSONファイルへのパスを `~` を含む形式または絶対パスで指定してください。
+
+**必要なIAMロール:**
+サービスアカウントには、Vertex AIモデルを呼び出す権限が必要です。
+*   `Vertex AI ユーザー` ロール
+
 ## コマンドリファレンス
 
 ### `llm-cli prompt`
@@ -156,7 +187,7 @@ AWS IDには、Bedrockモデルを呼び出す権限が必要です。
 | ---------- | ------------------------------------------------------------------ |
 | `list`     | 利用可能な全プロファイルとアクティブなプロファイルを表示します。     |
 | `use`      | アクティブなプロファイルを切り替えます。`llm-cli profile use <profile-name>` |
-| `add`      | 既存のプロファイルをコピーして新しいプロファイルを作成します。`llm-cli profile add <new-name> [--from <existing-name>]` |
+| `add`      | 新しいプロファイルを作成します。パラメータを指定しない場合、デフォルトプロファイルの設定をコピーします。`llm-cli profile add <new-name> [--provider <provider>] [--model <model>] [...]` |
 | `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>` |
 | `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`     |
 | `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開きます。     |

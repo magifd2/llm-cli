@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### ✨ Features
+*   **Google Cloud Vertex AI Provider Support**: Added support for interacting with Google Cloud Vertex AI.
+*   **Enhanced `profile add` Command**: The `profile add` command now allows specifying parameters such as provider, model, endpoint, API key, AWS credentials, GCP Project ID, location, and credentials file path in a single command.
+
+### ♻️ Refactor
+*   **Runtime Expansion of Credential File Paths**: Changed the expansion of `credentials_file` paths to occur at runtime instead of at configuration time, providing greater flexibility in dynamic home directory environments.
+
+### 📝 Documentation
+*   **Updated Related Documentation**: `README.en.md` and `DEVELOPING_PROVIDERS.en.md` have been updated to reflect the addition of the Vertex AI provider and the enhanced `profile add` command.
+
 ### ♻️ Refactor
 *   **Code Audit and Quality Improvements**: Performed a full code audit and fixed potential bugs and vulnerabilities. Hardened against command injection in `profile edit`, centralized config path management, and improved error messages to enhance robustness and maintainability.
 

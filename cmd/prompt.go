@@ -83,6 +83,8 @@ var promptCmd = &cobra.Command{
                 fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
                 provider = &llm.MockProvider{}
             }
+        case "vertexai":
+            provider = &llm.VertexAIProvider{Profile: activeProfile}
         default:
             // For now, default to mock provider if not ollama
             fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)

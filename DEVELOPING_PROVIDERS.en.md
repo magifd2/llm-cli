@@ -130,3 +130,27 @@ Finally, make the CLI aware of your new provider. Open `cmd/prompt.go` and find 
 ```
 
 After these steps, a user can set `provider: my_provider` in their profile, and `llm-cli` will use your new implementation.
+
+### Step 4: Google Cloud Vertex AI Provider Implementation
+
+The Google Cloud Vertex AI provider is implemented in `internal/llm/vertexai.go`. This provider interacts with the Vertex AI API using the `cloud.google.com/go/vertexai/genai` library.
+
+**Authentication:**
+Authentication uses the service account key specified by `credentials_file` in the profile. If `credentials_file` is not specified, Application Default Credentials (ADC) are used. The `credentials_file` path can include `~` (tilde), which will be expanded to the user's home directory at runtime.
+
+**Required Profile Settings:**
+To use the Vertex AI provider, the following settings are required in your profile:
+
+*   `provider`: `vertexai`
+*   `model`: The ID of the Vertex AI model to use (e.g., `gemini-1.5-pro-001`)
+*   `project_id`: Your GCP Project ID
+*   `location`: The region for the Vertex AI endpoint (e.g., `us-central1`)
+*   `credentials_file`: (Optional) Path to your GCP credentials JSON file
+
+**Implementation Highlights:**
+*   `newVertexAIClient` function validates `project_id` and `location`.
+*   If `credentials_file` is provided, `option.WithCredentialsFile()` is used for authentication.
+*   `Chat` and `ChatStream` methods use `genai.GenerativeModel` to generate content.
+*   `SystemInstruction` (singular) field is used to set the system prompt.
+
+```

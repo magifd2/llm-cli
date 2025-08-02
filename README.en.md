@@ -132,6 +132,37 @@ Your AWS identity must have permissions to invoke Bedrock models.
 ```
 *Note: As a best practice, restrict the `Resource` to the specific models you need.*
 
+#### 4. Google Cloud Vertex AI
+
+To use Google Cloud Vertex AI, you need to set up a GCP project and prepare your credentials.
+
+**Prerequisites:**
+1.  Ensure you have a Google Cloud Platform (GCP) project created for using Vertex AI.
+2.  Enable the **Vertex AI API** in your target GCP project.
+3.  Create a service account key and download it in **JSON** format. Store this key file securely.
+    *   Grant the service account the **"Vertex AI User"** role.
+
+**Configuration Steps:**
+
+```bash
+# Add a new profile for Vertex AI (one-shot configuration)
+llm-cli profile add my-vertex-ai \
+  --provider vertexai \
+  --model gemini-1.5-pro-001 \
+  --project-id "your-gcp-project-id" \
+  --location "us-central1" \
+  --credentials-file "~/path/to/your/service-account-key.json"
+
+# Switch to the newly created profile
+llm-cli profile use my-vertex-ai
+```
+
+**Note:** For `credentials-file`, you can specify the path to your service account key JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime.
+
+**Required IAM Roles:**
+Your service account needs permissions to invoke Vertex AI models.
+*   `Vertex AI User` role
+
 ## Command Reference
 
 ### `llm-cli prompt`
@@ -156,7 +187,7 @@ Manages configuration profiles.
 | ---------- | ------------------------------------------------------------------ |
 | `list`     | Shows all available profiles and indicates the active one.         |
 | `use`      | Switches the active profile. `llm-cli profile use <profile-name>`  |
-| `add`      | Creates a new profile by copying an existing one. `llm-cli profile add <new-name> [--from <existing-name>]` |
+| `add`      | Creates a new profile. If no parameters are specified, it copies settings from the default profile. `llm-cli profile add <new-name> [--provider <provider>] [--model <model>] [...]` |
 | `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>` |
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`         |
 | `edit`     | Opens the `config.json` file in your default text editor.          |

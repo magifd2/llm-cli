@@ -19,13 +19,16 @@ const (
 
 // Profile defines the settings for a specific LLM provider and model.
 type Profile struct {
-	Provider string `json:"provider"`
-	Endpoint string `json:"endpoint,omitempty"`
-	APIKey    string `json:"api_key,omitempty"`
-	Model          string `json:"model"`
-	AWSRegion      string `json:"aws_region,omitempty"`
-	AWSAccessKeyID string `json:"aws_access_key_id,omitempty"`
+	Provider        string `json:"provider"`
+	Endpoint        string `json:"endpoint,omitempty"`
+	APIKey          string `json:"api_key,omitempty"`
+	Model           string `json:"model"`
+	AWSRegion       string `json:"aws_region,omitempty"`
+	AWSAccessKeyID  string `json:"aws_access_key_id,omitempty"`
 	AWSSecretAccessKey string `json:"aws_secret_access_key,omitempty"`
+	ProjectID       string `json:"project_id,omitempty"`       // Vertex AI用にこれを追加
+	Location        string `json:"location,omitempty"`         // Vertex AI用にこれを追加
+	CredentialsFile string `json:"credentials_file,omitempty"` // サービスアカウントキーのパスを追加
 }
 
 // Load reads the configuration file from the user's config directory.
