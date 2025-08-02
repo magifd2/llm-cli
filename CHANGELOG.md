@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### ✨ Features
+*   **Profile Check Command**: Added `llm-cli profile check` command to verify and migrate configuration profiles.
+    *   Checks all profiles for consistency, especially for newly introduced settings like 'limits'.
+    *   Prompts the user to update profiles with default or unconfigured 'limits' settings to standard default values.
+    *   Includes a `--confirm` or `-y` flag for non-interactive operation.
+    *   Creates a timestamped backup of the `config.json` file in `~/.config/llm-cli/backups/` before saving any changes, ensuring data safety.
+    *   Enhanced the `profile show` command to display 'limits' information.
+
+### 🐛 Bug Fixes
+*   **DoS Protection Enhancements**: Addressed remaining issues related to DoS protection and UTF-8 safety.
+    *   Modified `readAndProcessStream` to stop reading input once the `MaxPromptSizeBytes` limit is reached, even in "warn" mode, preventing large files from being fully loaded into memory.
+    *   Updated `truncateStringByBytes` to be UTF-8 aware, ensuring that string truncation for size limiting does not corrupt multi-byte characters.
+*   **Configuration Loading Consistency**: Ensured `Limits` struct is always initialized with default values when loading configuration, even if not explicitly present in the config file. This guarantees consistent behavior across all profiles.
+
 ## v0.0.7 - 2025-08-03
 
 ### ✨ Features
@@ -71,7 +85,7 @@
 
 ### ✨ Features
 
-*   **Amazon Bedrock Nova Model Support**: Added support for interacting with Nova models such as `amazon.nova-lite-v1:0`.
+*   **Amazon Bedrock Nova Model Support**: Added support for interacting with Nova models suchs as `amazon.nova-lite-v1:0`.
 
 ### ♻️ Refactor
 

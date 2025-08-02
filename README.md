@@ -214,6 +214,12 @@ To prevent accidental excessive usage or potential misuse that could lead to hig
 
 By default, these limits are enabled for new profiles.
 
+For users upgrading from older versions, or to ensure all profiles have the latest default limit settings, you can use the `profile check` command:
+```bash
+llm-cli profile check
+```
+This command will inspect all your profiles and prompt you to update any `limits` settings that are at their default zero values (indicating they might be from an older version or not explicitly set). It also creates a timestamped backup of your `config.json` before making any changes.
+
 ```json
 "my-profile": {
     "provider": "openai",
