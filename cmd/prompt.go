@@ -84,17 +84,14 @@ var promptCmd = &cobra.Command{
 		systemPrompt, _ := cmd.Flags().GetString("system-prompt")
 		systemPromptFile, _ := cmd.Flags().GetString("system-prompt-file")
 
-		userPromptStr, err := loadPrompt(userPrompt, userPromptFile, limits, onInputExceeded)
-		if err != nil {
-			return err
-		}
-		systemPromptStr, err := loadPrompt(systemPrompt, systemPromptFile, limits, onInputExceeded)
+		systemPromptStr, err := loadSystemPrompt(systemPrompt, systemPromptFile, limits, onInputExceeded)
 		if err != nil {
 			return err
 		}
 
-		if userPromptStr == "" && len(args) > 0 {
-			userPromptStr = args[0]
+		userPromptStr, err := loadUserPrompt(userPrompt, userPromptFile, args, limits, onInputExceeded)
+		if err != nil {
+			return err
 		}
 
 		if userPromptStr == "" {
@@ -220,7 +217,8 @@ func handleStreamResponse(cmd *cobra.Command, provider llm.Provider, systemPromp
 	return nil
 }
 
-func loadPrompt(directValue, filePath string, limits config.Limits, onExceeded string) (string, error) {
+// loadUserPrompt loads the user prompt from a direct value, a file, or stdin.
+func loadUserPrompt(directValue, filePath string, args []string, limits config.Limits, onExceeded string) (string, error) {
 	if directValue != "" {
 		return handlePromptData([]byte(directValue), "argument", limits, onExceeded)
 	}
@@ -228,33 +226,56 @@ func loadPrompt(directValue, filePath string, limits config.Limits, onExceeded s
 		if filePath == "-" {
 			return readAndProcessStream(os.Stdin, "stdin", limits, onExceeded)
 		}
-		file, err := os.Open(filePath)
-		if err != nil {
-			return "", fmt.Errorf("error opening prompt file: %w", err)
-		}
-		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil {
-			return "", fmt.Errorf("error getting file stats: %w", err)
-		}
-
-		if limits.Enabled && stat.Size() > limits.MaxPromptSizeBytes {
-			if onExceeded == "stop" {
-				return "", fmt.Errorf("input file size (%d bytes) exceeds the limit of %d bytes", stat.Size(), limits.MaxPromptSizeBytes)
-			} else if onExceeded == "warn" {
-				fmt.Fprintf(os.Stderr, "Warning: Input file size (%d bytes) exceeds the limit of %d bytes. Reading up to the limit...\n", stat.Size(), limits.MaxPromptSizeBytes)
-			}
-		}
-		return readAndProcessStream(file, fmt.Sprintf("file '%s'", filePath), limits, onExceeded)
+		return loadPromptFromFile(filePath, limits, onExceeded)
+	}
+	if len(args) > 0 {
+		return handlePromptData([]byte(args[0]), "argument", limits, onExceeded)
 	}
 
+	// If no direct value, file path, or args, check for stdin pipe
 	stat, err := os.Stdin.Stat()
 	if err != nil || (stat.Mode()&os.ModeCharDevice) != 0 {
 		return "", nil // No pipe, no problem
 	}
-
 	return readAndProcessStream(os.Stdin, "stdin", limits, onExceeded)
+}
+
+// loadSystemPrompt loads the system prompt from a direct value or a file.
+// It explicitly disallows reading from stdin for system prompts.
+func loadSystemPrompt(directValue, filePath string, limits config.Limits, onExceeded string) (string, error) {
+	if directValue != "" {
+		return handlePromptData([]byte(directValue), "argument", limits, onExceeded)
+	}
+	if filePath != "" {
+		if filePath == "-" {
+			return "", fmt.Errorf("reading system prompt from stdin is not allowed")
+		}
+		return loadPromptFromFile(filePath, limits, onExceeded)
+	}
+	return "", nil // No system prompt provided
+}
+
+// loadPromptFromFile reads content from a specified file path.
+func loadPromptFromFile(filePath string, limits config.Limits, onExceeded string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("error opening prompt file: %w", err)
+	}
+	defer file.Close()
+
+	stat, err := file.Stat()
+	if err != nil {
+		return "", fmt.Errorf("error getting file stats: %w", err)
+	}
+
+	if limits.Enabled && stat.Size() > limits.MaxPromptSizeBytes {
+		if onExceeded == "stop" {
+			return "", fmt.Errorf("input file size (%d bytes) exceeds the limit of %d bytes", stat.Size(), limits.MaxPromptSizeBytes)
+		} else if onExceeded == "warn" {
+			fmt.Fprintf(os.Stderr, "Warning: Input file size (%d bytes) exceeds the limit of %d bytes. Reading up to the limit...\n", stat.Size(), limits.MaxPromptSizeBytes)
+		}
+	}
+	return readAndProcessStream(file, fmt.Sprintf("file '%s'", filePath), limits, onExceeded)
 }
 
 func readAndProcessStream(r io.Reader, source string, limits config.Limits, onExceeded string) (string, error) {
