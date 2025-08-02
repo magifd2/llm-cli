@@ -287,16 +287,22 @@ func readAndProcessStream(r io.Reader, source string, limits config.Limits, onEx
 		chunk := make([]byte, 4096)
 		n, err := reader.Read(chunk)
 		if n > 0 {
-			totalBytes += int64(n)
-			if limits.Enabled && totalBytes > limits.MaxPromptSizeBytes {
+			// Check if adding this chunk would exceed the limit
+			if limits.Enabled && totalBytes+int64(n) > limits.MaxPromptSizeBytes {
 				if onExceeded == "stop" {
 					return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
 				}
-				// For warn, we just stop reading and will truncate later
-				buf.Write(chunk[:n])
-				break
+			// For warn, write only up to the limit and then stop reading
+			bytesToWrite := limits.MaxPromptSizeBytes - totalBytes
+			if bytesToWrite > 0 {
+				buf.Write(chunk[:bytesToWrite])
 			}
-			buf.Write(chunk[:n])
+			// Log warning and break from loop
+			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
+			break // Stop reading further
+		}
+		buf.Write(chunk[:n])
+		totalBytes += int64(n)
 		}
 		if err == io.EOF {
 			break
@@ -313,14 +319,14 @@ func handlePromptData(data []byte, source string, limits config.Limits, onExceed
 	// 1. Sanitize
 	sanitizedStr := sanitizeUTF8(string(data), source)
 
-	// 2. Check size and truncate if needed
+	// 2. Check size and truncate if needed (only if not already truncated by readAndProcessStream)
 	if limits.Enabled && int64(len(sanitizedStr)) > limits.MaxPromptSizeBytes {
 		if onExceeded == "warn" {
-			// This case is for stdin that was read up to the buffer limit
+			// This case is primarily for direct values (argument, not file/stdin)
 			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
 			return truncateStringByBytes(sanitizedStr, limits.MaxPromptSizeBytes), nil
 		}
-		// Stop case should have been handled earlier for files, but as a fallback for stdin
+		// Stop case should have been handled earlier for files/stdin, but as a fallback for direct values
 		return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
 	}
 
@@ -339,15 +345,18 @@ func truncateStringByBytes(s string, maxBytes int64) string {
 	if int64(len(s)) <= maxBytes {
 		return s
 	}
-	// Find the last rune start position that is within the limit
-	endIndex := 0
-	for i := range s {
-		if int64(i) > maxBytes {
-			return s[:endIndex]
+
+	var currentBytes int64
+	var lastRuneEnd int
+	for i, r := range s {
+		runeLen := int64(utf8.RuneLen(r))
+		if currentBytes+runeLen > maxBytes {
+			return s[:lastRuneEnd]
 		}
-		endIndex = i
+		currentBytes += runeLen
+		lastRuneEnd = i + int(runeLen)
 	}
-	return s[:endIndex]
+	return s[:lastRuneEnd]
 }
 
 // init function registers the promptCmd with the rootCmd and defines its flags.
