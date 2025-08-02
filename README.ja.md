@@ -234,7 +234,18 @@ Vertex AIのGenAI SDKでは、システムプロンプトに直接対応する�
 | ---------- | ------------------------------------------------------------------ |
 | `list`     | 利用可能な全プロファイルとアクティブなプロファイルを表示します。     |
 | `use`      | アクティブなプロファイルを切り替えます。`llm-cli profile use <profile-name>` |
-| `add`      | 新しいプロファイルを作成します。パラメータを指定しない場合、デフォルトプロファイルの設定をコピーします。`llm-cli profile add <new-name> [--provider <provider>] [--model <model>] [...]` |
+| `add`      | 新しいプロファイルを作成します。パラメータを指定しない場合、デフォルトプロファイルの設定をコピーします。 |
+|            | **オプション:**                                                                                          |
+|            | `--provider <provider>`: LLMプロバイダー（例: ollama, openai, bedrock, vertexai）                        |
+|            | `--model <model>`: モデル名（例: llama3, gpt-4, gemini-1.5-pro-001）                                      |
+|            | `--endpoint <url>`: APIエンドポイントURL                                                                 |
+|            | `--api-key <key>`: プロバイダーのAPIキー                                                                 |
+|            | `--aws-region <region>`: BedrockのAWSリージョン                                                          |
+|            | `--aws-access-key-id <id>`: BedrockのAWSアクセスキーID                                                   |
+|            | `--aws-secret-access-key <key>`: BedrockのAWSシークレットアクセスキー                                    |
+|            | `--project-id <id>`: Vertex AIのGCPプロジェクトID                                                        |
+|            | `--location <location>`: Vertex AIのGCPロケーション                                                       |
+|            | `--credentials-file <path>`: Vertex AIのGCPクレデンシャルファイルへのパス                                |
 | `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>` |
 | `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`     |
 | `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開きます。     |

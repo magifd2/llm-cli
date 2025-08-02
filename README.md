@@ -234,7 +234,18 @@ Manages configuration profiles.
 | ---------- | ------------------------------------------------------------------ |
 | `list`     | Shows all available profiles and indicates the active one.         |
 | `use`      | Switches the active profile. `llm-cli profile use <profile-name>`  |
-| `add`      | Creates a new profile. If no parameters are specified, it copies settings from the default profile. `llm-cli profile add <new-name> [--provider <provider>] [--model <model>] [...]` |
+| `add`      | Creates a new profile. If no parameters are specified, it copies settings from the default profile. |
+|            | **Options:**                                                                                             |
+|            | `--provider <provider>`: LLM provider (e.g., ollama, openai, bedrock, vertexai)                          |
+|            | `--model <model>`: Model name (e.g., llama3, gpt-4, gemini-1.5-pro-001)                                  |
+|            | `--endpoint <url>`: API endpoint URL                                                                     |
+|            | `--api-key <key>`: API key for the provider                                                              |
+|            | `--aws-region <region>`: AWS region for Bedrock                                                          |
+|            | `--aws-access-key-id <id>`: AWS Access Key ID for Bedrock                                                |
+|            | `--aws-secret-access-key <key>`: AWS Secret Access Key for Bedrock                                       |
+|            | `--project-id <id>`: GCP Project ID for Vertex AI                                                        |
+|            | `--location <location>`: GCP Location for Vertex AI                                                      |
+|            | `--credentials-file <path>`: Path to GCP credentials file for Vertex AI                                  |
 | `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>` |
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`         |
 | `edit`     | Opens the `config.json` file in your default text editor.          |
