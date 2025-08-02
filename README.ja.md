@@ -114,6 +114,9 @@ llm-cli profile set endpoint "http://localhost:1234/v1"
 # 通常はLM Studioのモデル識別子を使用できます。
 llm-cli profile set model "gemma-2-9b-it"
 
+# (任意) OpenAI互換APIが認証を必要とする場合、APIキーを設定
+# llm-cli profile set api_key "YOUR_API_KEY"
+
 # 新しく作成したプロファイルに切り替え
 llm-cli profile use lmstudio
 ```
