@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
@@ -36,13 +35,13 @@ var useCmd = &cobra.Command{
 	Short: "Set the active profile",
 	Long:  `Set the active profile for llm-cli.`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		profileName := args[0]
 		if err := useProfile(profileName); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error: %w", err)
 		}
 		fmt.Printf("Switched to profile: %s\n", profileName)
+		return nil
 	},
 }
 

@@ -27,9 +27,12 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +41,7 @@ import (
 var promptCmd = &cobra.Command{
 	Use:   "prompt",
 	Short: "Send a prompt to the LLM",
-	Long:  `Sends a prompt to the configured LLM and prints the response.`,
+	Long:  `Sends a prompt to the configured LLM and prints the response.`, // Corrected: Removed unnecessary escaping of backticks.
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Get prompt values from flags.
 		userPrompt, _ := cmd.Flags().GetString("user-prompt")
@@ -62,98 +65,121 @@ var promptCmd = &cobra.Command{
 		}
 
 		// 3. Load configuration and determine the active LLM provider.
-        cfg, err := config.Load()
-        if err != nil {
-            fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-            os.Exit(1)
-        }
+		cfg, err := config.Load()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+			os.Exit(1)
+		}
 
-        profileName, _ := cmd.Flags().GetString("profile")
-        var activeProfile config.Profile
-        var ok bool
+		profileName, _ := cmd.Flags().GetString("profile")
+		var activeProfile config.Profile
+		var ok bool
 
-        // If a specific profile is requested via flag, use it; otherwise, use the current active profile.
-        if profileName != "" {
-            activeProfile, ok = cfg.Profiles[profileName]
-            if !ok {
-                fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
-                os.Exit(1)
-            }
-        } else {
-            activeProfile, ok = cfg.Profiles[cfg.CurrentProfile]
-            if !ok {
-                fmt.Fprintf(os.Stderr, "Error: Active profile '%s' not found.\n", cfg.CurrentProfile)
-                os.Exit(1)
-            }
-        }
+		// If a specific profile is requested via flag, use it; otherwise, use the current active profile.
+		if profileName != "" {
+			activeProfile, ok = cfg.Profiles[profileName]
+			if !ok {
+				fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
+				os.Exit(1)
+			}
+		} else {
+			activeProfile, ok = cfg.Profiles[cfg.CurrentProfile]
+			if !ok {
+				fmt.Fprintf(os.Stderr, "Error: Active profile '%s' not found.\n", cfg.CurrentProfile)
+				os.Exit(1)
+			}
+		}
 
-        var provider llm.Provider
-        // Initialize the appropriate LLM provider based on the active profile's provider type.
-        switch activeProfile.Provider {
-        case "ollama":
-            provider = &llm.OllamaProvider{Profile: activeProfile}
-        case "openai":
-            provider = &llm.OpenAIProvider{Profile: activeProfile}
-        case "bedrock":
-            // For Bedrock, check the model ID to determine if it's a Nova model.
-            // If it's a Nova model, use NovaBedrockProvider; otherwise, use a mock provider for unsupported models.
-            if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
-                provider = &llm.NovaBedrockProvider{Profile: activeProfile}
-            } else {
-                fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
-                provider = &llm.MockProvider{}
-            }
-        case "vertexai":
-            provider = &llm.VertexAIProvider{Profile: activeProfile}
-        default:
-            // If the provider is not recognized, default to a mock provider and issue a warning.
-            fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
-            provider = &llm.MockProvider{}
-        }
+		var provider llm.Provider
+		// Initialize the appropriate LLM provider based on the active profile's provider type.
+		switch activeProfile.Provider {
+		case "ollama":
+			provider = &llm.OllamaProvider{Profile: activeProfile}
+		case "openai":
+			provider = &llm.OpenAIProvider{Profile: activeProfile}
+		case "bedrock":
+			// For Bedrock, check the model ID to determine if it's a Nova model.
+			// If it's a Nova model, use NovaBedrockProvider; otherwise, use a mock provider for unsupported models.
+			if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
+				provider = &llm.NovaBedrockProvider{Profile: activeProfile}
+			} else {
+				fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
+				provider = &llm.MockProvider{}
+			}
+		case "vertexai":
+			provider = &llm.VertexAIProvider{Profile: activeProfile}
+		default:
+			// If the provider is not recognized, default to a mock provider and issue a warning.
+			fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
+			provider = &llm.MockProvider{}
+		}
 
-        // 4. Get and print the LLM response, either streaming or as a single response.
-        stream, _ := cmd.Flags().GetBool("stream")
-        if stream {
-            var wg sync.WaitGroup
-            // Use a buffered channel to prevent the goroutine from blocking if the main goroutine is slow.
-            errChan := make(chan error, 1)
-            responseChan := make(chan string)
+		// 4. Get and print the LLM response, either streaming or as a single response.
+		stream, _ := cmd.Flags().GetBool("stream")
+		if stream {
+			var wg sync.WaitGroup
+			// Use a buffered channel to prevent the goroutine from blocking if the main goroutine is slow.
+			errChan := make(chan error, 1)
+			responseChan := make(chan string)
 
-            wg.Add(1)
-            go func() {
-                defer wg.Done()
-                defer close(responseChan)
-                err := provider.ChatStream(cmd.Context(), systemPromptStr, userPromptStr, responseChan)
-                if err != nil {
-                    errChan <- err
-                }
-            }()
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				defer close(responseChan)
+				err := provider.ChatStream(cmd.Context(), systemPromptStr, userPromptStr, responseChan)
+				if err != nil {
+					errChan <- err
+				}
+			}()
 
-            // Read from the response channel until it's closed and print tokens.
-            for token := range responseChan {
-                fmt.Print(token)
-            }
+			// Read from the response channel until it's closed and print tokens.
+			for token := range responseChan {
+				fmt.Print(token)
+			}
 
-            // Wait for the goroutine to finish completely and check for any errors.
-            wg.Wait()
-            close(errChan)
+			// Wait for the goroutine to finish completely and check for any errors.
+			wg.Wait()
+			close(errChan)
 
-            if err := <-errChan; err != nil {
-                fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
-                os.Exit(1)
-            }
+			if err := <-errChan; err != nil {
+				fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
+				os.Exit(1)
+			}
 
-            fmt.Println() // Print a final newline after the stream ends for clean output.
-        } else {
-            // Get a single response from the LLM.
-            response, err := provider.Chat(systemPromptStr, userPromptStr)
-            if err != nil {
-                fmt.Fprintf(os.Stderr, "Error getting response: %v\n", err)
-                os.Exit(1)
-            }
-            fmt.Println(response)
-        }
-    },
+			fmt.Println() // Print a final newline after the stream ends for clean output.
+		} else {
+			var response string
+			var err error
+
+			// isatty.IsTerminal で、標準出力がターミナルかどうかを判定
+			if isatty.IsTerminal(os.Stdout.Fd()) {
+				// 【ターミナルの場合：スピナーを表示】
+				s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+				s.Suffix = "  Generating response..."
+				s.Start()
+
+				// 非同期でレスポンスを取得
+				done := make(chan bool)
+				go func() {
+					response, err = provider.Chat(systemPromptStr, userPromptStr)
+					done <- true
+				}()
+				<-done
+
+				s.Stop()
+			} else {
+				// 【リダイレクト/パイプの場合：スピナーを表示しない】
+				// 単純にレスポンスを待つ
+				response, err = provider.Chat(systemPromptStr, userPromptStr)
+			}
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error getting response: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println(response)
+		}
+	},
 }
 
 // loadPrompt determines the prompt string based on direct input, file path, or stdin.

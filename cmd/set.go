@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
@@ -36,19 +35,18 @@ var setCmd = &cobra.Command{
 	Short: "Set a value in the current profile",
 	Long:  `Set a configuration value for the currently active profile.`,
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error loading config: %w", err)
 		}
 
 		if err := setProfileValue(args[0], args[1]); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error: %w", err)
 		}
 		// Success message moved here
 		fmt.Printf("Set %s = %s in profile %s\n", args[0], args[1], cfg.CurrentProfile)
+		return nil
 	},
 }
 
@@ -101,5 +99,3 @@ func setProfileValue(key, value string) error {
 func init() {
 	profileCmd.AddCommand(setCmd)
 }
-
-

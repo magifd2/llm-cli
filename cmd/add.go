@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	os "os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
@@ -34,20 +33,18 @@ import (
 var addCmd = &cobra.Command{
 	Use:   "add [profile_name]",
 	Short: "Add a new profile",
-	Long:  `Adds a new profile. If no specific parameters are provided, it copies settings from the default profile. Otherwise, it creates a new profile with the specified parameters.`,
+	Long:  `Adds a new profile. If no specific parameters are provided, it copies settings from the default profile. Otherwise, it creates a new profile with the specified parameters.`, 
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		profileName := args[0]
 
 		cfg, err := config.Load()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error loading config: %w", err)
 		}
 
 		if _, ok := cfg.Profiles[profileName]; ok {
-			fmt.Fprintf(os.Stderr, "Error: Profile '%s' already exists\n", profileName)
-			os.Exit(1)
+			return fmt.Errorf("Error: Profile '%s' already exists", profileName)
 		}
 
 		newProfile := config.Profile{}
@@ -66,8 +63,7 @@ var addCmd = &cobra.Command{
 
 			defaultProfile, ok := cfg.Profiles["default"]
 			if !ok {
-				fmt.Fprintf(os.Stderr, "Error: Default profile not found. Cannot create new profile without parameters.\n")
-				os.Exit(1)
+				return fmt.Errorf("Error: Default profile not found. Cannot create new profile without parameters.")
 			}
 			newProfile = defaultProfile
 		} else {
@@ -98,12 +94,12 @@ var addCmd = &cobra.Command{
 		cfg.Profiles[profileName] = newProfile
 
 		if err := cfg.Save(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error saving config: %w", err)
 		}
 
 		fmt.Printf("Profile '%s' added.\n", profileName)
 		fmt.Printf("To switch to the new profile, run: llm-cli profile use %s\n", profileName)
+		return nil
 	},
 }
 

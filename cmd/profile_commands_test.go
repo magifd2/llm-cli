@@ -22,15 +22,18 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bytes"
+	"os"
 	"testing"
 
 	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // setupTestEnvironment creates a temporary directory and a dummy config file.
-func setupTestEnvironment(t *testing.T) {
+func setupTestEnvironment(t *testing.T) string {
 	tempDir := t.TempDir()
 	t.Setenv("HOME", tempDir)
 
@@ -50,13 +53,26 @@ func setupTestEnvironment(t *testing.T) {
 	}
 	err := cfg.Save()
 	require.NoError(t, err)
+	return tempDir
+}
+
+// executeCommand is a helper function to execute cobra commands and capture their output.
+func executeCommand(root *cobra.Command, args ...string) (string, string, error) {
+	var outBuf, errBuf bytes.Buffer
+	root.SetOut(&outBuf)
+	root.SetErr(&errBuf)
+	root.SetArgs(args)
+
+	err := root.Execute()
+
+	return outBuf.String(), errBuf.String(), err
 }
 
 func TestAddCommand(t *testing.T) {
-	setupTestEnvironment(t)
+	_ = setupTestEnvironment(t)
 
 	// Test adding a new profile
-	err := addProfile("new_profile")
+	_, _, err := executeCommand(rootCmd, "profile", "add", "new_profile")
 	assert.NoError(t, err)
 
 	// Verify the profile was added
@@ -66,15 +82,15 @@ func TestAddCommand(t *testing.T) {
 	assert.Equal(t, "ollama", cfg.Profiles["new_profile"].Provider) // Should copy from default
 
 	// Test adding a profile that already exists (should fail)
-	err = addProfile("default")
+	_, _, err = executeCommand(rootCmd, "profile", "add", "default")
 	assert.Error(t, err)
 }
 
 func TestUseCommand(t *testing.T) {
-	setupTestEnvironment(t)
+	_ = setupTestEnvironment(t)
 
 	// Test switching to an existing profile
-	err := useProfile("existing_profile")
+	_, _, err := executeCommand(rootCmd, "profile", "use", "existing_profile")
 	assert.NoError(t, err)
 
 	// Verify the current profile was changed
@@ -83,15 +99,15 @@ func TestUseCommand(t *testing.T) {
 	assert.Equal(t, "existing_profile", cfg.CurrentProfile)
 
 	// Test switching to a non-existent profile (should fail)
-	err = useProfile("non_existent_profile")
+	_, _, err = executeCommand(rootCmd, "profile", "use", "non_existent_profile")
 	assert.Error(t, err)
 }
 
 func TestSetCommand(t *testing.T) {
-	setupTestEnvironment(t)
+	_ = setupTestEnvironment(t)
 
 	// Test setting a new model for the default profile
-	err := setProfileValue("model", "test-model-123")
+	_, _, err := executeCommand(rootCmd, "profile", "set", "model", "test-model-123")
 	assert.NoError(t, err)
 
 	// Verify the model was set
@@ -100,15 +116,15 @@ func TestSetCommand(t *testing.T) {
 	assert.Equal(t, "test-model-123", cfg.Profiles["default"].Model)
 
 	// Test setting an invalid key (should fail)
-	err = setProfileValue("invalid_key", "test_value")
+	_, _, err = executeCommand(rootCmd, "profile", "set", "invalid_key", "test_value")
 	assert.Error(t, err)
 }
 
 func TestRemoveCommand(t *testing.T) {
-	setupTestEnvironment(t)
+	_ = setupTestEnvironment(t)
 
 	// Test removing an existing, non-active profile
-	err := removeProfile("existing_profile")
+	_, _, err := executeCommand(rootCmd, "profile", "remove", "existing_profile")
 	assert.NoError(t, err)
 
 	// Verify the profile was removed
@@ -117,7 +133,7 @@ func TestRemoveCommand(t *testing.T) {
 	assert.NotContains(t, cfg.Profiles, "existing_profile")
 
 	// Test removing the default profile (should fail)
-	err = removeProfile("default")
+	_, _, err = executeCommand(rootCmd, "profile", "remove", "default")
 	assert.Error(t, err)
 
 	// Test removing the active profile (should fail)
@@ -129,6 +145,25 @@ func TestRemoveCommand(t *testing.T) {
 	cfg.CurrentProfile = "default"
 	require.NoError(t, cfg.Save())
 
-	err = removeProfile("default")
+	_, _, err = executeCommand(rootCmd, "profile", "remove", "default")
 	assert.Error(t, err)
+}
+
+// TestMain is required to reset the command state between tests.
+func TestMain(m *testing.M) {
+	// This is a bit of a hack to allow cobra's state to be reset between tests.
+	// It's not ideal, but it's a common pattern for testing cobra apps.
+	var (
+		originalOut = os.Stdout
+		originalErr = os.Stderr
+	)
+
+	// Run the tests
+	code := m.Run()
+
+	// Restore original stdout and stderr
+	profileCmd.SetOut(originalOut)
+	profileCmd.SetErr(originalErr)
+
+	os.Exit(code)
 }

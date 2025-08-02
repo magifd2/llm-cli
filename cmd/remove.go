@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
@@ -34,15 +33,15 @@ import (
 var removeCmd = &cobra.Command{
 	Use:   "remove [profile_name]",
 	Short: "Remove a profile",
-	Long:  `Removes a specified profile from the configuration.`,
+	Long:  `Removes a specified profile from the configuration.`, 
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		profileName := args[0]
 		if err := removeProfile(profileName); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("Error: %w", err)
 		}
 		fmt.Printf("Profile '%s' removed.\n", profileName)
+		return nil
 	},
 }
 

@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### ✨ Features
+*   **Improve UX with Spinner**: Added a spinner to the `prompt` command when not using `--stream` mode to provide visual feedback during long-running operations. The spinner is only displayed in interactive terminals.
+
+### ♻️ Refactor
+*   **Improve Testability of Profile Commands**: Refactored `profile` subcommands (`add`, `set`, `use`, `remove`) to return errors instead of calling `os.Exit`, making them testable. The test suite was updated to execute commands directly and validate their behavior, improving test reliability.
+
 ## v0.0.6 - 2025-08-02
 
 ### ✨ Features
