@@ -2,6 +2,36 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-02 (Release v0.0.5 and Documentation/Build System Enhancements)
+
+- **Release v0.0.5 Preparation**:
+  - Updated `CHANGELOG.ja.md` and `CHANGELOG.md` to reflect the `v0.0.5` release.
+  - Added application version (`ver.0.0.5`) to `cmd/root.go`.
+  - Improved `Short` and `Long` descriptions in `cmd/root.go` for better clarity.
+  - Executed `make all` to build and test the application.
+  - Created Git tag `v0.0.5` (corrected from `ver.0.0.5`).
+
+- **Code Comment Cleanup**:
+  - Standardized all code comments to English only across `cmd/`, `internal/config/`, and `internal/llm/` directories.
+  - Added copyright headers to test files (`cmd/edit_test.go`, `cmd/profile_commands_test.go`, `internal/config/config_test.go`).
+
+- **Makefile Enhancements**:
+  - Added `install` and `uninstall` targets for easier binary and completion script management.
+  - Implemented `PREFIX` variable for flexible installation paths (system-wide or user-local).
+  - Ensured macOS builds always produce universal binaries (`amd64` and `arm64`).
+
+- **Documentation Overhaul**:
+  - Updated `README.md`, `README.ja.md`, `BUILD.md`, `BUILD.ja.md` to reflect new installation procedures and macOS universal binary builds.
+  - Created `CONTRIBUTING.md` by integrating development guidelines from `GEMINI.md` and provider development guides.
+  - Removed redundant `DEVELOPING_PROVIDERS.en.md` and `DEVELOPING_PROVIDERS.ja.md`.
+  - Created `SECURITY.md` with vulnerability reporting guidelines and security principles.
+  - Updated `README.md` and `README.ja.md` to link to `SECURITY.md`.
+  - Updated `README.md` and `README.ja.md` to include API key configuration for OpenAI-compatible APIs.
+  - Updated `README.md` and `README.ja.md` to include `--profile` option for `prompt` command.
+  - Updated `README.md` and `README.ja.md` to include `show` subcommand for `profile` command.
+  - Standardized English documentation file names (e.g., `README.en.md` to `README.md`).
+  - Updated language policy in `.gemini/GEMINI.md` to reflect the new documentation naming convention.
+
 ## 2025-08-02 (Vertex AI SDK Migration and System Prompt Workaround)
 
 - **Initial Attempt with Incorrect SDK**: Began migrating Vertex AI provider to a new SDK based on external developer's provided code (`google.golang.org/genai/vertexai`). This led to persistent build errors due to incorrect package paths and API usage.
