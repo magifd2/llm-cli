@@ -32,13 +32,18 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "llm-cli",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Version: "ver.0.0.5",
+	Short: "A CLI tool for interacting with various LLM providers.",
+	Long: `llm-cli is a powerful command-line interface tool designed for seamless interaction with various Large Language Model (LLM) providers.
+It supports providers such as Ollama, LM Studio (OpenAI compatible API), Amazon Bedrock, and Google Cloud Vertex AI.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Key Features:
+- Interact with multiple LLM providers from your terminal.
+- Manage different LLM configurations using profiles, allowing for easy switching between models and settings.
+- Send prompts via command-line arguments, files, or standard input.
+- Receive streaming responses for real-time interaction.
+
+This tool simplifies the process of experimenting with and utilizing different LLMs directly from your command line.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

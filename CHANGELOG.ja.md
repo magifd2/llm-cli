@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## v0.0.5 - 2025-08-02
 
 ### ✨ Features
 *   **Google Cloud Vertex AI プロバイダーのサポート**: Vertex AI との対話に対応しました。

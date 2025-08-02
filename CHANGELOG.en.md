@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## v0.0.5 - 2025-08-02
 
 ### ✨ Features
 *   **Google Cloud Vertex AI Provider Support**: Added support for interacting with Google Cloud Vertex AI.
