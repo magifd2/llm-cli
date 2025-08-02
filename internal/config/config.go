@@ -80,6 +80,20 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	// Ensure all profiles have default limits if not explicitly set
+	for name, profile := range cfg.Profiles {
+		if (profile.Limits == Limits{}) {
+			profile.Limits = Limits{
+				Enabled:              true,
+				OnInputExceeded:      "stop",
+				OnOutputExceeded:     "stop",
+				MaxPromptSizeBytes:   10485760, // 10MB
+				MaxResponseSizeBytes: 20971520, // 20MB
+			}
+			cfg.Profiles[name] = profile
+		}
+	}
+
 	return &cfg, nil
 }
 

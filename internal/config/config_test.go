@@ -57,12 +57,26 @@ func TestSaveAndLoad_Cycle(t *testing.T) {
 			"default": {
 				Provider: "ollama",
 				Model:    "llama3",
+				Limits: Limits{ // Add Limits with default values
+					Enabled:              true,
+					OnInputExceeded:      "stop",
+					OnOutputExceeded:     "stop",
+					MaxPromptSizeBytes:   10485760,
+					MaxResponseSizeBytes: 20971520,
+				},
 			},
 			"test_profile": {
 				Provider: "openai",
 				Endpoint: "http://localhost:1234/v1",
 				Model:    "test-model",
 				APIKey:   "test-key",
+				Limits: Limits{ // Add Limits with default values
+					Enabled:              true,
+					OnInputExceeded:      "stop",
+					OnOutputExceeded:     "stop",
+					MaxPromptSizeBytes:   10485760,
+					MaxResponseSizeBytes: 20971520,
+				},
 			},
 		},
 	}
