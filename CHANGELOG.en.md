@@ -11,7 +11,8 @@
 *   **Runtime Expansion of Credential File Paths**: Changed the expansion of `credentials_file` paths to occur at runtime instead of at configuration time, providing greater flexibility in dynamic home directory environments.
 
 ### 📝 Documentation
-*   **Updated Related Documentation**: `README.ja.md` and `README.en.md` have been updated to reflect the addition of the Vertex AI provider and the enhanced `profile add` command.
+*   **Updated Development Log**: Added detailed history of Vertex AI SDK migration and current SDK status to `DEVELOPMENT_LOG.md`.
+*   **Updated Related Documentation**: `README.ja.md` and `README.en.md` have been updated to reflect the addition of the Vertex AI provider and the enhanced `profile add` command usage, and system prompt handling approach.
 *   **Revised Provider Development Guide**: Removed specific provider implementation details from `DEVELOPING_PROVIDERS.ja.md` and `DEVELOPING_PROVIDERS.en.md`.
 *   **Updated Changelogs**: `CHANGELOG.ja.md` and `CHANGELOG.en.md` have been updated.
 

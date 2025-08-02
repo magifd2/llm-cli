@@ -11,6 +11,7 @@
 *   **クレデンシャルファイルパスの実行時展開**: `credentials_file` のパス展開を、設定時ではなく実行時に行うように変更しました。これにより、動的なホームディレクトリ環境でも柔軟に対応できるようになりました。
 
 ### 📝 Documentation
+*   **開発経緯の更新**: `DEVELOPMENT_LOG.md` にVertex AI SDK移行の詳細な経緯とSDKの現状に関する記述を追加しました。
 *   **関連ドキュメントの更新**: `README.ja.md` および `README.en.md` を、Vertex AI プロバイダーの追加と `profile add` コマンドの機能拡張、システムプロンプトの扱いについて更新しました。
 *   **プロバイダー開発ガイドの修正**: `DEVELOPING_PROVIDERS.ja.md` および `DEVELOPING_PROVIDERS.en.md` から、特定のプロバイダー実装に関する記述を削除しました。
 *   **変更履歴の更新**: `CHANGELOG.ja.md` および `CHANGELOG.en.md` を更新しました。

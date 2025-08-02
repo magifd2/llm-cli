@@ -2,6 +2,21 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-02 (Vertex AI SDK Migration and System Prompt Workaround)
+
+- **Initial Attempt with Incorrect SDK**: Began migrating Vertex AI provider to a new SDK based on external developer's provided code (`google.golang.org/genai/vertexai`). This led to persistent build errors due to incorrect package paths and API usage.
+- **Misunderstanding of `google.golang.org/genai`**: Repeated attempts to fix build errors by forcing `google.golang.org/genai` to `v0.4.0` via `go.mod` `replace` directives, based on external advice, proved ineffective and highlighted a fundamental misunderstanding of the SDK's structure.
+- **Clarification of `genai.NewClient` Signature**: Through direct consultation of `https://pkg.go.dev/google.golang.org/genai`, it was clarified that `genai.NewClient` expects a `*genai.ClientConfig` object, not variable arguments of `ClientOption`s directly.
+- **Authentication Implementation**: Correctly implemented service account authentication by reading the JSON key file, parsing it, and using `auth.New2LOTokenProvider` to create a `TokenProvider` which is then set in `genai.ClientConfig.Credentials`.
+- **SDK Instability and Future Outlook**: It has become apparent that the Go client library for the GenAI SDK (`google.golang.org/genai`) is still in an early and somewhat unstable state. Key observations include:
+    - Lack of a `Close()` method on the `genai.Client` object, which is unusual for client libraries managing network connections.
+    - Inconsistent API behavior and documentation discrepancies encountered during the migration process.
+    - The need for workarounds (e.g., for system prompts) due to missing direct API support.
+    We will continue to monitor the updates to the `google.golang.org/genai` SDK and adapt our implementation as the library matures and stabilizes. Future enhancements will prioritize aligning with official best practices as they evolve.
+- **System Prompt Workaround**: Since Vertex AI's GenAI SDK does not directly support system prompts, a workaround was implemented. The system prompt content is now sent as the first message in the chat history for both `Chat` and `ChatStream` functions.
+- **Streaming Iterator Fix**: Corrected the usage of `chat.SendMessageStream` to iterate over its results using a `for ... range` loop, resolving `iter.Next undefined` errors.
+- **Successful Build and Verification**: After numerous iterations and careful adherence to the official SDK documentation, the application now builds successfully and the Vertex AI provider functions as expected with the new SDK.
+
 ## 2025-08-01 (Code Audit and Refactoring)
 
 - **Conducted a full code audit** to identify potential bugs and vulnerabilities.
