@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### ✨ Features
+*   **DoS Protection via Size Limits**: Implemented configurable input and output size limits to prevent accidental resource exhaustion.
+    *   Added a new `limits` object to profiles in `config.json`.
+    *   `prompt` command now checks these limits, with configurable behavior (`stop` or `warn`) on excess.
+    *   `add` command supports setting limits for new profiles via flags (e.g., `--limits-max-prompt-size-bytes`).
+    *   `set` command can now configure limits using dot notation (e.g., `limits.on_input_exceeded`).
+    *   `list` command now displays the configured limits for each profile.
 *   **Improve UX with Spinner**: Added a spinner to the `prompt` command when not using `--stream` mode to provide visual feedback during long-running operations. The spinner is only displayed in interactive terminals.
 
 ### ♻️ Refactor

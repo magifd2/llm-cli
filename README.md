@@ -208,6 +208,38 @@ Your service account needs permissions to invoke Vertex AI models.
 **System Prompt Handling:**
 Vertex AI's GenAI SDK does not directly support system prompts. Therefore, `llm-cli` simulates system prompt behavior by sending the system prompt content as the first message in the chat, followed by the user prompt content.
 
+### Size and Usage Limits (DoS Protection)
+
+To prevent accidental excessive usage or potential misuse that could lead to high costs or system instability, `llm-cli` includes a configurable limiting mechanism. These settings are managed within a `limits` object inside each profile.
+
+By default, these limits are enabled for new profiles.
+
+```json
+"my-profile": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "limits": {
+        "enabled": true,
+        "on_input_exceeded": "stop",
+        "on_output_exceeded": "stop",
+        "max_prompt_size_bytes": 10485760,
+        "max_response_size_bytes": 20971520
+    }
+}
+```
+
+*   `enabled`: A boolean (`true` or `false`) to turn limits on or off for the profile.
+*   `on_input_exceeded`: Determines the action when the prompt size exceeds the limit.
+    *   `"stop"` (default): The command will fail with an error message.
+    *   `"warn"`: The command will truncate the prompt, show a warning, and proceed.
+*   `on_output_exceeded`: Determines the action when the response size exceeds the limit.
+    *   `"stop"` (default): The command will fail (or stop streaming) with an error message.
+    *   `"warn"`: The command will truncate the response, show a warning, and exit successfully.
+*   `max_prompt_size_bytes`: The maximum allowed size of the combined user and system prompts in bytes. (Default: `10485760` / 10 MB)
+*   `max_response_size_bytes`: The maximum allowed size of the response from the LLM in bytes. (Default: `20971520` / 20 MB)
+
+These values can be configured using the `llm-cli profile set` and `llm-cli profile add` commands.
+
 ## Command Reference
 
 
@@ -215,14 +247,16 @@ Vertex AI's GenAI SDK does not directly support system prompts. Therefore, `llm-
 
 Sends a prompt to the currently active LLM.
 
-| Flag                 | Shorthand | Description                                                 |
-| -------------------- | --------- | ----------------------------------------------------------- |
-| `--user-prompt`      | `-p`      | The main prompt text to send to the model.                  |
-| `--user-prompt-file` | `-f`      | Path to a file containing the user prompt. Use `-` for stdin. |
-| `--system-prompt`    | `-P`      | An optional system-level instruction for the model.         |
-| `--system-prompt-file`| `-F`      | Path to a file containing the system prompt.                |
-| `--stream`           |           | Whether to display the response as a real-time stream.      |
-| `--profile`          |           | Use a specific profile for this command (overrides current active profile) |
+| Flag                      | Shorthand | Description                                                                 |
+| ------------------------- | --------- | --------------------------------------------------------------------------- |
+| `--user-prompt`           | `-p`      | The main prompt text to send to the model.                                  |
+| `--user-prompt-file`      | `-f`      | Path to a file containing the user prompt. Use `-` for stdin.                 |
+| `--system-prompt`         | `-P`      | An optional system-level instruction for the model.                         |
+| `--system-prompt-file`    | `-F`      | Path to a file containing the system prompt.                                |
+| `--stream`                |           | Whether to display the response as a real-time stream.                      |
+| `--profile`               |           | Use a specific profile for this command (overrides current active profile). |
+| `--on-input-exceeded`     |           | Override profile setting for input limit. (Accepts: `stop`, `warn`)         |
+| `--on-output-exceeded`    |           | Override profile setting for output limit. (Accepts: `stop`, `warn`)        |
 
 *If no prompt flag is provided, the first positional argument is used as the prompt. If that is also missing, input is read from stdin.*
 
@@ -230,26 +264,32 @@ Sends a prompt to the currently active LLM.
 
 Manages configuration profiles.
 
-| Subcommand | Description                                                        |
-| ---------- | ------------------------------------------------------------------ |
-| `list`     | Shows all available profiles and indicates the active one.         |
-| `use`      | Switches the active profile. `llm-cli profile use <profile-name>`  |
-| `add`      | Creates a new profile. If no parameters are specified, it copies settings from the default profile. |
-|            | **Options:**                                                                                             |
-|            | `--provider <provider>`: LLM provider (e.g., ollama, openai, bedrock, vertexai)                          |
-|            | `--model <model>`: Model name (e.g., llama3, gpt-4, gemini-1.5-pro-001)                                  |
-|            | `--endpoint <url>`: API endpoint URL                                                                     |
-|            | `--api-key <key>`: API key for the provider                                                              |
-|            | `--aws-region <region>`: AWS region for Bedrock                                                          |
-|            | `--aws-access-key-id <id>`: AWS Access Key ID for Bedrock                                                |
-|            | `--aws-secret-access-key <key>`: AWS Secret Access Key for Bedrock                                       |
-|            | `--project-id <id>`: GCP Project ID for Vertex AI                                                        |
-|            | `--location <location>`: GCP Location for Vertex AI                                                      |
-|            | `--credentials-file <path>`: Path to GCP credentials file for Vertex AI                                  |
-| `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>` |
-| `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`         |
-| `show`     | Shows details of a specific profile. `llm-cli profile show [profile-name]` |
-| `edit`     | Opens the `config.json` file in your default text editor.          |
+| Subcommand | Description                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| `list`     | Shows all available profiles, their primary settings, and limit configurations.                         |
+| `use`      | Switches the active profile. `llm-cli profile use <profile-name>`                                       |
+| `add`      | Creates a new profile. If no parameters are specified, it copies settings from the default profile.       |
+|            | **Options:**                                                                                            |
+|            | `--provider <provider>`: LLM provider (e.g., ollama, openai, bedrock, vertexai)                         |
+|            | `--model <model>`: Model name (e.g., llama3, gpt-4, gemini-1.5-pro-001)                                 |
+|            | `--endpoint <url>`: API endpoint URL                                                                    |
+|            | `--api-key <key>`: API key for the provider                                                             |
+|            | `--aws-region <region>`: AWS region for Bedrock                                                         |
+|            | `--aws-access-key-id <id>`: AWS Access Key ID for Bedrock                                               |
+|            | `--aws-secret-access-key <key>`: AWS Secret Access Key for Bedrock                                      |
+|            | `--project-id <id>`: GCP Project ID for Vertex AI                                                       |
+|            | `--location <location>`: GCP Location for Vertex AI                                                     |
+|            | `--credentials-file <path>`: Path to GCP credentials file for Vertex AI                                 |
+|            | `--limits-enabled <bool>`: Enable or disable limits for this profile. (Default: `true`)                 |
+|            | `--limits-on-input-exceeded <action>`: Action for input limit: `stop` or `warn`. (Default: `stop`)       |
+|            | `--limits-on-output-exceeded <action>`: Action for output limit: `stop` or `warn`. (Default: `stop`)      |
+|            | `--limits-max-prompt-size-bytes <bytes>`: Max prompt size in bytes. (Default: `10485760`)                |
+|            | `--limits-max-response-size-bytes <bytes>`: Max response size in bytes. (Default: `20971520`)             |
+| `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>`. See available keys below.     |
+|            | **Available Keys:** `provider`, `model`, `endpoint`, `api_key`, `aws_region`, `aws_access_key_id`, `aws_secret_access_key`, `project_id`, `location`, `credentials_file`, `limits.enabled`, `limits.on_input_exceeded`, `limits.on_output_exceeded`, `limits.max_prompt_size_bytes`, `limits.max_response_size_bytes` |
+| `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`                                              |
+| `show`     | Shows all details of a specific profile, including limits. `llm-cli profile show [profile-name]`        |
+| `edit`     | Opens the `config.json` file in your default text editor for manual changes.                            |
 
 ## Contributing & Development
 

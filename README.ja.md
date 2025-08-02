@@ -208,21 +208,54 @@ llm-cli profile use my-vertex-ai
 **システムプロンプトの扱い:**
 Vertex AIのGenAI SDKでは、システムプロンプトに直接対応する機能がありません。そのため、`llm-cli` では、チャットの最初のメッセージとしてシステムプロンプトの内容を送信し、その後にユーザープロンプトの内容を送信することで、擬似的にシステムプロンプトに対応しています。
 
-## コマンドリファレンス
+### サイズと使用量の制限（DoS対策）
 
+意図しない過剰な使用や、高額なコストやシステムの不安定化につながる可能性のある誤用を防ぐため、`llm-cli` には設定可能な制限メカニズムが含まれています。これらの設定は、各プロファイル内の `limits` オブジェクトで管理されます。
+
+デフォルトでは、新しいプロファイルに対してこれらの制限は有効になっています。
+
+```json
+"my-profile": {
+    "provider": "openai",
+    "model": "gpt-4",
+    "limits": {
+        "enabled": true,
+        "on_input_exceeded": "stop",
+        "on_output_exceeded": "stop",
+        "max_prompt_size_bytes": 10485760,
+        "max_response_size_bytes": 20971520
+    }
+}
+```
+
+*   `enabled`: 制限を有効（`true`）または無効（`false`）にするブール値。
+*   `on_input_exceeded`: プロンプトサイズが制限を超えた場合のアクションを決定します。
+    *   `"stop"` （デフォルト）: コマンドはエラーメッセージを出して失敗します。
+    *   `"warn"`: コマンドはプロンプTを切り捨て、警告を表示して処理を続行します。
+*   `on_output_exceeded`: レスポンスサイズが制限を超えた場合のアクションを決定します。
+    *   `"stop"` （デフォルト）: コマンドはエラーメッセージを出して失敗（またはストリーミングを停止）します。
+    *   `"warn"`: コマンドはレスポンスを切り捨て、警告を表示して正常に終了します。
+*   `max_prompt_size_bytes`: 許容される最大プロンプトサイズ（ユーザープロンプトとシステムプロンプトの合計）をバイト単位で指定します。（デフォルト: `10485760` / 10 MB）
+*   `max_response_size_bytes`: LLMからのレスポンスの最大許容サイズをバイト単位で指定します。（デフォルト: `20971520` / 20 MB）
+
+これらの値は `llm-cli profile set` および `llm-cli profile add` コマンドで設定できます。
+
+## コマンドリファレンス
 
 ### `llm-cli prompt`
 
 現在アクティブなLLMにプロンプトを送信します。
 
-| フラグ                 | 短縮形 | 説明                                                 |
-| -------------------- | ------ | ---------------------------------------------------- |
-| `--user-prompt`      | `-p`   | モデルに送信するメインのプロンプトテキスト。         |
-| `--user-prompt-file` | `-f`   | ユーザープロンプトを含むファイルへのパス。`-`で標準入力。 |
-| `--system-prompt`    | `-P`   | モデルへのオプションのシステムレベルの指示。         |
-| `--system-prompt-file`| `-F`   | システムプロンプトを含むファイルへのパス。           |
-| `--stream`           |        | 応答をリアルタイムストリームとして表示するかどうか。 |
-| `--profile`          |        | このコマンドに特定のプロファイルを使用します（現在アクティブなプロファイルを上書きします） |
+| フラグ                      | 短縮形 | 説明                                                                 |
+| ------------------------- | ------ | -------------------------------------------------------------------- |
+| `--user-prompt`           | `-p`   | モデルに送信するメインのプロンプトテキスト。                         |
+| `--user-prompt-file`      | `-f`   | ユーザープロンプトを含むファイルへのパス。`-`で標準入力。               |
+| `--system-prompt`         | `-P`   | モデルへのオプションのシステムレベルの指示。                         |
+| `--system-prompt-file`    | `-F`   | システムプロンプトを含むファイルへのパス。                           |
+| `--stream`                |        | 応答をリアルタイムストリームとして表示するかどうか。                 |
+| `--profile`               |        | このコマンドに特定のプロファイルを使用します（現在アクティブなプロファイルを上書きします）。 |
+| `--on-input-exceeded`     |        | 入力制限を超えた場合のプロファイル設定を上書きします。（`stop`、`warn`を受け入れます） |
+| `--on-output-exceeded`    |        | 出力制限を超えた場合のプロファイル設定を上書きします。（`stop`、`warn`を受け入れます） |
 
 *プロンプト用フラグが指定されない場合、最初の位置引数がプロンプトとして使用されます。それも無い場合は、標準入力から読み込まれます。*
 
@@ -230,26 +263,32 @@ Vertex AIのGenAI SDKでは、システムプロンプトに直接対応する�
 
 設定プロファイルを管理します。
 
-| サブコマンド | 説明                                                               |
-| ---------- | ------------------------------------------------------------------ |
-| `list`     | 利用可能な全プロファイルとアクティブなプロファイルを表示します。     |
-| `use`      | アクティブなプロファイルを切り替えます。`llm-cli profile use <profile-name>` |
-| `add`      | 新しいプロファイルを作成します。パラメータを指定しない場合、デフォルトプロファイルの設定をコピーします。 |
-|            | **オプション:**                                                                                          |
-|            | `--provider <provider>`: LLMプロバイダー（例: ollama, openai, bedrock, vertexai）                        |
-|            | `--model <model>`: モデル名（例: llama3, gpt-4, gemini-1.5-pro-001）                                      |
-|            | `--endpoint <url>`: APIエンドポイントURL                                                                 |
-|            | `--api-key <key>`: プロバイダーのAPIキー                                                                 |
-|            | `--aws-region <region>`: BedrockのAWSリージョン                                                          |
-|            | `--aws-access-key-id <id>`: BedrockのAWSアクセスキーID                                                   |
-|            | `--aws-secret-access-key <key>`: BedrockのAWSシークレットアクセスキー                                    |
-|            | `--project-id <id>`: Vertex AIのGCPプロジェクトID                                                        |
-|            | `--location <location>`: Vertex AIのGCPロケーション                                                       |
-|            | `--credentials-file <path>`: Vertex AIのGCPクレデンシャルファイルへのパス                                |
-| `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>` |
-| `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`     |
-| `show`     | 特定のプロファイルの詳細を表示します。`llm-cli profile show [profile-name]` |
-| `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開きます。     |
+| サブコマンド | 説明                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| `list`     | 利用可能な全プロファイル、その主要設定、および制限設定を表示します。                                      |
+| `use`      | アクティブなプロファイルを切り替えます。`llm-cli profile use <profile-name>`                                       |
+| `add`      | 新しいプロファイルを作成します。パラメータを指定しない場合、デフォルトプロファイルの設定をコピーします。       |
+|            | **オプション:**                                                                                            |
+|            | `--provider <provider>`: LLMプロバイダー（例: ollama, openai, bedrock, vertexai）                         |
+|            | `--model <model>`: モデル名（例: llama3, gpt-4, gemini-1.5-pro-001）                                 |
+|            | `--endpoint <url>`: APIエンドポイントURL                                                                    |
+|            | `--api-key <key>`: プロバイダーのAPIキー                                                             |
+|            | `--aws-region <region>`: BedrockのAWSリージョン                                                         |
+|            | `--aws-access-key-id <id>`: BedrockのAWSアクセスキーID                                               |
+|            | `--aws-secret-access-key <key>`: BedrockのAWSシークレットアクセスキー                                      |
+|            | `--project-id <id>`: Vertex AIのGCPプロジェクトID                                                       |
+|            | `--location <location>`: Vertex AIのGCPロケーション                                                     |
+|            | `--credentials-file <path>`: Vertex AIのGCPクレデンシャルファイルへのパス                                 |
+|            | `--limits-enabled <bool>`: このプロファイルの制限を有効または無効にします。（デフォルト: `true`）                 |
+|            | `--limits-on-input-exceeded <action>`: 入力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）       |
+|            | `--limits-on-output-exceeded <action>`: 出力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）      |
+|            | `--limits-max-prompt-size-bytes <bytes>`: 最大プロンプトサイズ（バイト）。（デフォルト: `10485760`）                |
+|            | `--limits-max-response-size-bytes <bytes>`: 最大レスポンスサイズ（バイト）。（デフォルト: `20971520`）             |
+| `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>`。利用可能なキーは以下を参照。     |
+|            | **利用可能なキー:** `provider`, `model`, `endpoint`, `api_key`, `aws_region`, `aws_access_key_id`, `aws_secret_access_key`, `project_id`, `location`, `credentials_file`, `limits.enabled`, `limits.on_input_exceeded`, `limits.on_output_exceeded`, `limits.max_prompt_size_bytes`, `limits.max_response_size_bytes` |
+| `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`                                              |
+| `show`     | 特定のプロファイルの詳細（制限設定を含む）を表示します。`llm-cli profile show [profile-name]`        |
+| `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開いて手動編集します。                            |
 
 ## コントリビューションと開発
 

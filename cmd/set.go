@@ -23,6 +23,8 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"
@@ -84,8 +86,40 @@ func setProfileValue(key, value string) error {
 		profile.Location = value
 	case "credentials_file":
 		profile.CredentialsFile = value
+	case "limits.enabled":
+		enabled, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid boolean value for limits.enabled: %s", value)
+		}
+		profile.Limits.Enabled = enabled
+	case "limits.on_input_exceeded":
+		if value != "stop" && value != "warn" {
+			return fmt.Errorf("invalid value for limits.on_input_exceeded: must be 'stop' or 'warn'")
+		}
+		profile.Limits.OnInputExceeded = value
+	case "limits.on_output_exceeded":
+		if value != "stop" && value != "warn" {
+			return fmt.Errorf("invalid value for limits.on_output_exceeded: must be 'stop' or 'warn'")
+		}
+		profile.Limits.OnOutputExceeded = value
+	case "limits.max_prompt_size_bytes":
+		size, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid integer value for limits.max_prompt_size_bytes: %s", value)
+		}
+		profile.Limits.MaxPromptSizeBytes = size
+	case "limits.max_response_size_bytes":
+		size, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid integer value for limits.max_response_size_bytes: %s", value)
+		}
+		profile.Limits.MaxResponseSizeBytes = size
 	default:
-		return fmt.Errorf("unknown configuration key '%s'.\nAvailable keys: model, provider, endpoint, api_key, aws_region, aws_access_key_id, aws_secret_access_key, project_id, location, credentials_file", key)
+		availableKeys := []string{
+			"model", "provider", "endpoint", "api_key", "aws_region", "aws_access_key_id", "aws_secret_access_key", "project_id", "location", "credentials_file",
+			"limits.enabled", "limits.on_input_exceeded", "limits.on_output_exceeded", "limits.max_prompt_size_bytes", "limits.max_response_size_bytes",
+		}
+		return fmt.Errorf("unknown configuration key '%s'.\nAvailable keys: %s", key, strings.Join(availableKeys, ", "))
 	}
 
 	cfg.Profiles[cfg.CurrentProfile] = profile

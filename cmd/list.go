@@ -34,7 +34,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all available profiles",
-	Long:  `Lists all saved profiles and indicates which one is currently active.`,
+	Long:  `Lists all saved profiles and indicates which one is currently active.`, 
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, err := config.Load()
 		if err != nil {
@@ -49,9 +49,29 @@ var listCmd = &cobra.Command{
 				activeMarker = "*"
 			}
 			fmt.Printf("  %s %s (provider: %s, model: %s)\n", activeMarker, name, p.Provider, p.Model)
+
+			if p.Limits.Enabled {
+				fmt.Printf("    - Limits: enabled (in: %s, out: %s, on_input: %s, on_output: %s)\n",
+					formatBytes(p.Limits.MaxPromptSizeBytes),
+					formatBytes(p.Limits.MaxResponseSizeBytes),
+					p.Limits.OnInputExceeded,
+					p.Limits.OnOutputExceeded)
+			}
 		}
 	},
+}
 
+func formatBytes(b int64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
 // init function registers the listCmd with the profileCmd.

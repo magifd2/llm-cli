@@ -42,7 +42,7 @@ var promptCmd = &cobra.Command{
 	Use:   "prompt",
 	Short: "Send a prompt to the LLM",
 	Long:  `Sends a prompt to the configured LLM and prints the response.`, // Corrected: Removed unnecessary escaping of backticks.
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		// 1. Get prompt values from flags.
 		userPrompt, _ := cmd.Flags().GetString("user-prompt")
 		userPromptFile, _ := cmd.Flags().GetString("user-prompt-file")
@@ -60,15 +60,13 @@ var promptCmd = &cobra.Command{
 
 		// If userPromptStr is still empty, it's an error as a user prompt is mandatory.
 		if userPromptStr == "" {
-			fmt.Fprintf(os.Stderr, "Error: No user prompt provided. Please use --user-prompt, --user-prompt-file, provide a positional argument, or pipe input to stdin.\n")
-			os.Exit(1)
+			return fmt.Errorf("no user prompt provided. Please use --user-prompt, --user-prompt-file, provide a positional argument, or pipe input to stdin")
 		}
 
 		// 3. Load configuration and determine the active LLM provider.
 		cfg, err := config.Load()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading config: %w", err)
 		}
 
 		profileName, _ := cmd.Flags().GetString("profile")
@@ -79,14 +77,36 @@ var promptCmd = &cobra.Command{
 		if profileName != "" {
 			activeProfile, ok = cfg.Profiles[profileName]
 			if !ok {
-				fmt.Fprintf(os.Stderr, "Error: Profile '%s' not found.\n", profileName)
-				os.Exit(1)
+				return fmt.Errorf("profile '%s' not found", profileName)
 			}
 		} else {
 			activeProfile, ok = cfg.Profiles[cfg.CurrentProfile]
 			if !ok {
-				fmt.Fprintf(os.Stderr, "Error: Active profile '%s' not found.\n", cfg.CurrentProfile)
-				os.Exit(1)
+				return fmt.Errorf("active profile '%s' not found", cfg.CurrentProfile)
+			}
+		}
+
+		// 4. Apply limits
+		if activeProfile.Limits.Enabled {
+			onInputExceeded := activeProfile.Limits.OnInputExceeded
+			if cmd.Flags().Changed("on-input-exceeded") {
+				onInputExceeded, _ = cmd.Flags().GetString("on-input-exceeded")
+			}
+
+			promptSize := int64(len(userPromptStr) + len(systemPromptStr))
+			if promptSize > activeProfile.Limits.MaxPromptSizeBytes {
+				if onInputExceeded == "stop" {
+					return fmt.Errorf("input size (%d bytes) exceeds the limit of %d bytes", promptSize, activeProfile.Limits.MaxPromptSizeBytes)
+				} else if onInputExceeded == "warn" {
+					fmt.Fprintf(os.Stderr, "Warning: Input size (%d bytes) exceeds the limit of %d bytes. Truncating...\n", promptSize, activeProfile.Limits.MaxPromptSizeBytes)
+					// Truncate the user prompt
+					combinedLen := int64(len(systemPromptStr))
+					if combinedLen < activeProfile.Limits.MaxPromptSizeBytes {
+						userPromptStr = userPromptStr[:activeProfile.Limits.MaxPromptSizeBytes-combinedLen]
+					} else {
+						userPromptStr = ""
+					}
+				}
 			}
 		}
 
@@ -114,7 +134,7 @@ var promptCmd = &cobra.Command{
 			provider = &llm.MockProvider{}
 		}
 
-		// 4. Get and print the LLM response, either streaming or as a single response.
+		// 5. Get and print the LLM response, either streaming or as a single response.
 		stream, _ := cmd.Flags().GetBool("stream")
 		if stream {
 			var wg sync.WaitGroup
@@ -132,8 +152,25 @@ var promptCmd = &cobra.Command{
 				}
 			}()
 
+			var totalResponseSize int64
 			// Read from the response channel until it's closed and print tokens.
 			for token := range responseChan {
+				if activeProfile.Limits.Enabled {
+					onOutputExceeded := activeProfile.Limits.OnOutputExceeded
+					if cmd.Flags().Changed("on-output-exceeded") {
+						onOutputExceeded, _ = cmd.Flags().GetString("on-output-exceeded")
+					}
+
+					totalResponseSize += int64(len(token))
+					if totalResponseSize > activeProfile.Limits.MaxResponseSizeBytes {
+						if onOutputExceeded == "stop" {
+							return fmt.Errorf("\nError: Output size exceeded the limit of %d bytes.", activeProfile.Limits.MaxResponseSizeBytes)
+						} else if onOutputExceeded == "warn" {
+							fmt.Fprintf(os.Stderr, "\nWarning: Output size exceeded the limit of %d bytes. Truncating...\n", activeProfile.Limits.MaxResponseSizeBytes)
+							break
+						}
+					}
+				}
 				fmt.Print(token)
 			}
 
@@ -142,8 +179,7 @@ var promptCmd = &cobra.Command{
 			close(errChan)
 
 			if err := <-errChan; err != nil {
-				fmt.Fprintf(os.Stderr, "\nError: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("\nError: %w", err)
 			}
 
 			fmt.Println() // Print a final newline after the stream ends for clean output.
@@ -174,11 +210,27 @@ var promptCmd = &cobra.Command{
 			}
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting response: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("Error getting response: %w", err)
+			}
+
+			if activeProfile.Limits.Enabled {
+				onOutputExceeded := activeProfile.Limits.OnOutputExceeded
+				if cmd.Flags().Changed("on-output-exceeded") {
+					onOutputExceeded, _ = cmd.Flags().GetString("on-output-exceeded")
+				}
+
+				if int64(len(response)) > activeProfile.Limits.MaxResponseSizeBytes {
+					if onOutputExceeded == "stop" {
+						return fmt.Errorf("Error: Output size (%d bytes) exceeds the limit of %d bytes.", len(response), activeProfile.Limits.MaxResponseSizeBytes)
+					} else if onOutputExceeded == "warn" {
+						fmt.Fprintf(os.Stderr, "Warning: Output size (%d bytes) exceeds the limit of %d bytes. Truncating...\n", len(response), activeProfile.Limits.MaxResponseSizeBytes)
+						response = response[:activeProfile.Limits.MaxResponseSizeBytes]
+					}
+				}
 			}
 			fmt.Println(response)
 		}
+		return nil
 	},
 }
 
@@ -234,4 +286,8 @@ func init() {
 	promptCmd.Flags().StringP("system-prompt-file", "F", "", "Path to a file containing the system prompt.")
 	promptCmd.Flags().Bool("stream", false, "Enable streaming response")
 	promptCmd.Flags().String("profile", "", "Use a specific profile for this command (overrides current active profile)")
+
+	// Flags for limits
+	promptCmd.Flags().String("on-input-exceeded", "", "Action on input size limit exceeded (stop or warn)")
+	promptCmd.Flags().String("on-output-exceeded", "", "Action on output size limit exceeded (stop or warn)")
 }

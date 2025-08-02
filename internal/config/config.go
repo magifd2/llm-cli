@@ -31,6 +31,16 @@ type Profile struct {
 	ProjectID          string `json:"project_id,omitempty"`      // GCP Project ID for Vertex AI.
 	Location           string `json:"location,omitempty"`        // GCP Location for Vertex AI.
 	CredentialsFile    string `json:"credentials_file,omitempty"` // Path to GCP credentials file for Vertex AI (e.g., service account key).
+	Limits             Limits `json:"limits,omitempty"`
+}
+
+// Limits defines the usage and size limits for a profile.
+type Limits struct {
+	Enabled              bool   `json:"enabled"`
+	OnInputExceeded      string `json:"on_input_exceeded,omitempty"`
+	OnOutputExceeded     string `json:"on_output_exceeded,omitempty"`
+	MaxPromptSizeBytes   int64  `json:"max_prompt_size_bytes,omitempty"`
+	MaxResponseSizeBytes int64  `json:"max_response_size_bytes,omitempty"`
 }
 
 // Load reads the configuration file from the user's config directory.
@@ -51,6 +61,13 @@ func Load() (*Config, error) {
 					"default": {
 						Provider: "ollama",
 						Model:    "llama3",
+						Limits: Limits{
+							Enabled:              true,
+							OnInputExceeded:      "stop",
+							OnOutputExceeded:     "stop",
+							MaxPromptSizeBytes:   10485760, // 10MB
+							MaxResponseSizeBytes: 20971520, // 20MB
+						},
 					},
 				},
 			}, nil

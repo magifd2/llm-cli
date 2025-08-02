@@ -91,6 +91,21 @@ var addCmd = &cobra.Command{
 			newProfile.CredentialsFile = credentialsFile
 		}
 
+		// Populate limits with flag values, or use defaults
+		limitsEnabled, _ := cmd.Flags().GetBool("limits-enabled")
+		onInputExceeded, _ := cmd.Flags().GetString("limits-on-input-exceeded")
+		onOutputExceeded, _ := cmd.Flags().GetString("limits-on-output-exceeded")
+		maxPromptSizeBytes, _ := cmd.Flags().GetInt64("limits-max-prompt-size-bytes")
+		maxResponseSizeBytes, _ := cmd.Flags().GetInt64("limits-max-response-size-bytes")
+
+		newProfile.Limits = config.Limits{
+			Enabled:              limitsEnabled,
+			OnInputExceeded:      onInputExceeded,
+			OnOutputExceeded:     onOutputExceeded,
+			MaxPromptSizeBytes:   maxPromptSizeBytes,
+			MaxResponseSizeBytes: maxResponseSizeBytes,
+		}
+
 		cfg.Profiles[profileName] = newProfile
 
 		if err := cfg.Save(); err != nil {
@@ -117,4 +132,11 @@ func init() {
 	addCmd.Flags().String("project-id", "", "GCP Project ID for Vertex AI")
 	addCmd.Flags().String("location", "", "GCP Location for Vertex AI")
 	addCmd.Flags().String("credentials-file", "", "Path to GCP credentials file for Vertex AI")
+
+	// Flags for limits
+	addCmd.Flags().Bool("limits-enabled", true, "Enable limits for the profile")
+	addCmd.Flags().String("limits-on-input-exceeded", "stop", "Action on input size limit exceeded (stop or warn)")
+	addCmd.Flags().String("limits-on-output-exceeded", "stop", "Action on output size limit exceeded (stop or warn)")
+	addCmd.Flags().Int64("limits-max-prompt-size-bytes", 10485760, "Max prompt size in bytes (10MB)")
+	addCmd.Flags().Int64("limits-max-response-size-bytes", 20971520, "Max response size in bytes (20MB)")
 }

@@ -2,6 +2,31 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Feature: Add Configurable Size Limits for DoS Protection)
+
+- **Objective**: To protect users from accidental high costs and prevent the application from crashing due to excessively large inputs or outputs.
+- **Analysis**: Identified two primary risks:
+    1.  **Resource Exhaustion**: Large prompts or responses could consume excessive memory, leading to instability.
+    2.  **Unintended API Costs**: Sending very large prompts to a cloud provider could incur significant, unexpected costs.
+- **Implementation Details**:
+    - **`internal/config/config.go`**:
+        - Added a new `Limits` struct containing fields: `Enabled`, `OnInputExceeded`, `OnOutputExceeded`, `MaxPromptSizeBytes`, and `MaxResponseSizeBytes`.
+        - Embedded the `Limits` struct into the `Profile` struct.
+        - Updated the `Load()` function to provide safe default limit values for new configurations.
+    - **`cmd/add.go`**:
+        - Added new flags (`--limits-enabled`, `--limits-on-input-exceeded`, etc.) to allow for the configuration of limits upon profile creation.
+    - **`cmd/set.go`**:
+        - Extended the `set` command to recognize and modify `limits` fields using dot notation (e.g., `llm-cli profile set limits.enabled false`).
+        - Added necessary type conversions (string to bool/int64) and validation.
+    - **`cmd/list.go`**:
+        - Modified the output of the `list` command to display the configured limits for each profile, enhancing user visibility.
+    - **`cmd/prompt.go`**:
+        - Implemented the core enforcement logic.
+        - Before sending a request, the command now checks the total prompt size against `MaxPromptSizeBytes`.
+        - During response handling (both streaming and non-streaming), the total response size is monitored against `MaxResponseSizeBytes`.
+        - Added `--on-input-exceeded` and `--on-output-exceeded` flags to allow users to override the configured behavior (`stop` or `warn`) for a single execution.
+- **Outcome**: The application now has a robust, user-configurable mechanism to prevent DoS scenarios, improving both safety and stability.
+
 ## 2025-08-02 (Build Fix: Corrected `cmd/list.go` Import Statement)
 
 - **Resolved Build Error**:
