@@ -41,4 +41,11 @@ This document outlines the future development roadmap and planned feature enhanc
 - **Target Models**: Prioritize widely used models such as Anthropic Claude (e.g., `anthropic.claude-v2`, `anthropic.claude-3-sonnet-20240229-v1:0`).
 - **Implementation Strategy**: Following the successful refactoring for Nova models, implement new provider files (e.g., `bedrock_claude.go`) for each model family, adhering to their specific API request/response formats and streaming protocols.
 
+### 2. Input Validation and Security Hardening
+
+- **Objective**: Strengthen the application against potential security vulnerabilities related to user input.
+- **Key Initiatives**:
+  - **Input Size Limitation**: Implement a configurable size limit for input prompts, especially from standard input, to mitigate denial-of-service (DoS) risks.
+  - **UTF-8 Validation**: Enforce UTF-8 validation for all incoming prompt data to prevent issues arising from malformed character encodings.
+
 - (To be defined based on user feedback, market trends, and project priorities.)
