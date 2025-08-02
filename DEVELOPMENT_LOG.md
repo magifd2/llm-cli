@@ -2,6 +2,14 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## v0.0.8 Development Cycle: Known Issues to Address
+
+- **Objective**: To fix critical bugs related to input handling and size limiting that were discovered in the v0.0.7 release.
+- **Key Issues**:
+    1.  **Incorrect Standard Input Handling**: The logic for reading from stdin is flawed, causing it to be consumed incorrectly and preventing size limits from being applied to piped data. The system prompt should never attempt to read from stdin.
+    2.  **Lack of UTF-8 Safety**: The current string truncation for size limiting is not-UTF-8-aware, which can corrupt multi-byte characters. Furthermore, there is no validation to ensure input data is valid UTF-8 in the first place.
+    3.  **Memory Safety Vulnerability**: When reading from a file, the entire file is loaded into memory before its size is checked, creating a potential for a denial-of-service attack by providing a very large file.
+
 ## 2025-08-03 (Fix: CLI Error-Handling Behavior)
 
 - **Problem**: It was observed that when a command like `prompt` failed due to a runtime error (e.g., an API error or invalid input), the application would print the full usage/help text along with the error message. This was confusing and unnecessary.
