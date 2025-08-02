@@ -23,7 +23,7 @@ package cmd
 
 import (
 	"fmt"
-	os
+	"os"
 
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/spf13/cobra"

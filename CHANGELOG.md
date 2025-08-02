@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased
+
+### 🐛 Bug Fixes
+*   **Build Fix**: Corrected a syntax error in `cmd/list.go` where the `os` package import was missing quotes, resolving persistent "missing import path" build errors.
+
+### 🔒 Security
+*   **Enhanced Configuration File Permissions**: Implemented more restrictive file permissions for `~/.config/llm-cli/config.json` (changed from `0644` to `0600`) and its parent directory (changed from `0755` to `0700`) to enhance the security of sensitive information like API keys.
+
 ## v0.0.5 - 2025-08-02
 
 ### ✨ Features

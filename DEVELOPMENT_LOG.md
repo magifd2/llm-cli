@@ -2,6 +2,22 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-02 (Build Fix: Corrected `cmd/list.go` Import Statement)
+
+- **Resolved Build Error**:
+  - Identified and corrected a syntax error in `cmd/list.go` where the `os` package import was missing quotes (`import (os)` instead of `import ("os")`).
+  - This syntax error was the root cause of the persistent "missing import path" build errors, which had previously masked other issues and led to extensive troubleshooting.
+  - The fix was applied manually by the user.
+  - Verified successful build after the correction.
+
+## 2025-08-02 (Security Enhancements: Configuration File Permissions)
+
+- **Enhanced Security for Configuration File**:
+  - Modified `internal/config/config.go` to set more restrictive file permissions for `~/.config/llm-cli/config.json` and its parent directory.
+  - Changed `os.WriteFile` permission from `0644` to `0600` for `config.json`.
+  - Changed `os.MkdirAll` permission from `0755` to `0700` for the `llm-cli` configuration directory.
+  - This ensures that only the file owner can read and write the configuration file, enhancing the security of sensitive information like API keys.
+
 ## 2025-08-02 (Release v0.0.5 and Documentation/Build System Enhancements)
 
 - **Release v0.0.5 Preparation**:

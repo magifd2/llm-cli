@@ -37,3 +37,4 @@ Upon receiving a vulnerability report, we will:
 *   **Sensitive Information Handling**: Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations.
 *   **Dependency Security**: All code, dependencies, and configurations must be reviewed for potential security vulnerabilities before being committed. Regularly scan project dependencies for known vulnerabilities.
 *   **Secure Development Lifecycle**: Incorporate threat modeling, security-focused code reviews, and safe testing practices throughout the development process.
+*   **Secure Configuration Storage**: Configuration files containing sensitive information (e.g., API keys) must be stored with restrictive file and directory permissions (e.g., `0600` for files, `0700` for directories) to prevent unauthorized access.
