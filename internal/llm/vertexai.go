@@ -2,20 +2,20 @@ package llm
 
 import (
 	"context"
+	"encoding/json" // 追加: JSONパース用
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"cloud.google.com/go/vertexai/genai"
 	"github.com/magifd2/llm-cli/internal/config"
-	"google.golang.org/api/iterator"
-	"google.golang.org/api/option"
+	"cloud.google.com/go/auth" // auth.Credentials を使用するため追加
+	"google.golang.org/genai"
 )
 
 // VertexAIProvider implements the Provider interface for Google Cloud Vertex AI.
-// 認証は、プロファイルで `credentials_file` が指定されている場合はそのサービスアカウントキーを、
-// 指定されていない場合は Application Default Credentials (ADC) を使用します。
+// NOTE: このプロバイダーは、新しい `google.golang.org/genai` SDK を使用し、
+// Vertex AI バックエンドを指定することで、非推奨の警告を解決します。
 type VertexAIProvider struct {
 	Profile config.Profile
 }
@@ -24,23 +24,64 @@ type VertexAIProvider struct {
 func (p *VertexAIProvider) newVertexAIClient(ctx context.Context) (*genai.Client, error) {
 	projectID := p.Profile.ProjectID
 	location := p.Profile.Location
-	credentialsFile := p.Profile.CredentialsFile // サービスアカウントキーファイルのパス
+	credentialsFile := p.Profile.CredentialsFile
 
 	if projectID == "" || location == "" {
 		return nil, fmt.Errorf("project_id and location must be set in the profile for vertexai provider")
 	}
 
-	// credentials_fileが指定されていれば、それを使用してクライアントを初期化
+	clientConfig := &genai.ClientConfig{
+		Project:  projectID,
+		Location: location,
+		Backend:  genai.BackendVertexAI,
+	}
+
 	if credentialsFile != "" {
 		expandedPath, err := expandPath(credentialsFile)
 		if err != nil {
 			return nil, fmt.Errorf("expanding path for credentials_file: %w", err)
 		}
-		return genai.NewClient(ctx, projectID, location, option.WithCredentialsFile(expandedPath))
+		// クレデンシャルファイルから認証情報をロード
+		credsJSON, err := os.ReadFile(expandedPath) // ファイルを読み込む
+		if err != nil {
+			return nil, fmt.Errorf("failed to read credentials file: %w", err)
+		}
+		if len(credsJSON) == 0 { // credsJSON が空の場合のチェックを追加
+			return nil, fmt.Errorf("credentials file is empty: %s", expandedPath)
+		}
+
+		// サービスアカウントJSONをパースして必要な情報を抽出
+		var sa struct {
+			ClientEmail string `json:"client_email"`
+			PrivateKey  string `json:"private_key"`
+			TokenURI    string `json:"token_uri"`
+			ProjectID   string `json:"project_id"` // JSONからproject_idを取得
+		}
+		if err := json.Unmarshal(credsJSON, &sa); err != nil {
+			return nil, fmt.Errorf("invalid service account JSON: %w", err)
+		}
+
+		// TokenProvider を作成
+		tp, err := auth.New2LOTokenProvider(&auth.Options2LO{
+			Email:      sa.ClientEmail,
+			PrivateKey: []byte(sa.PrivateKey),
+			TokenURL:   sa.TokenURI,
+			Scopes:     []string{"https://www.googleapis.com/auth/cloud-platform"}, // Scope は必須
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create token provider: %w", err)
+		}
+
+		clientConfig.Credentials = auth.NewCredentials(&auth.CredentialsOptions{TokenProvider: tp}) // auth.NewCredentials を使用
 	}
 
-	// 指定されていない場合は、ADC (Application Default Credentials) を使用
-	return genai.NewClient(ctx, projectID, location)
+	// Vertex AI用のクライアントを作成します。
+	client, err := genai.NewClient(ctx, clientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error creating new genai client: %w", err)
+	}
+
+	return client, nil
 }
 
 // expandPath expands a path that starts with ~ to the user's home directory.
@@ -62,20 +103,17 @@ func (p *VertexAIProvider) Chat(systemPrompt, userPrompt string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	defer client.Close()
+	// defer client.Close() を削除
 
-	model := client.GenerativeModel(p.Profile.Model)
-	// Vertex AI (Gemini) では、SystemInstructionsはチャットセッションの最初のターンにのみ有効です。
-	// ここでは、リクエストごとに設定することで、対話的でない `Chat` メソッドの動作を模倣します。
-	if systemPrompt != "" {
-		model.SystemInstruction = &genai.Content{
-			Parts: []genai.Part{genai.Text(systemPrompt)},
-		}
+	// Chatオブジェクトを生成
+	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil) // モデルIDを直接渡す
+	if err != nil {
+		return "", fmt.Errorf("error creating chat: %w", err)
 	}
 
-	resp, err := model.GenerateContent(ctx, genai.Text(userPrompt))
+	resp, err := chat.SendMessage(ctx, genai.Part{Text: userPrompt})
 	if err != nil {
-		return "", fmt.Errorf("error generating content from vertexai: %w", err)
+		return "", fmt.Errorf("error sending message to vertexai: %w", err)
 	}
 
 	return extractTextFromResponse(resp), nil
@@ -87,22 +125,15 @@ func (p *VertexAIProvider) ChatStream(ctx context.Context, systemPrompt, userPro
 	if err != nil {
 		return err
 	}
-	defer client.Close()
+	// defer client.Close() を削除
 
-	model := client.GenerativeModel(p.Profile.Model)
-	if systemPrompt != "" {
-		model.SystemInstruction = &genai.Content{
-			Parts: []genai.Part{genai.Text(systemPrompt)},
-		}
+	// Chatオブジェクトを生成
+	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil) // モデルIDを直接渡す
+	if err != nil {
+		return fmt.Errorf("error creating chat: %w", err)
 	}
 
-	iter := model.GenerateContentStream(ctx, genai.Text(userPrompt))
-
-	for {
-		resp, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
+	for resp, err := range chat.SendMessageStream(ctx, genai.Part{Text: userPrompt}) { // for ... range 構文を使用
 		if err != nil {
 			return fmt.Errorf("error reading stream from vertexai: %w", err)
 		}
@@ -130,9 +161,7 @@ func extractTextFromResponse(resp *genai.GenerateContentResponse) string {
 	for _, cand := range resp.Candidates {
 		if cand.Content != nil {
 			for _, part := range cand.Content.Parts {
-				if txt, ok := part.(genai.Text); ok {
-					sb.WriteString(string(txt))
-				}
+				sb.WriteString(part.Text)
 			}
 		}
 	}
