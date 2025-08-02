@@ -49,7 +49,11 @@ clean:
 install: build
 	@echo "Installing $(BINARY_NAME) to $(BIN_DIR)..."
 	@mkdir -p $(BIN_DIR)
-	@cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/
+	@if [ "$(shell go env GOOS)" = "darwin" ]; then \
+		cp $(OUTPUT_DIR)/darwin-universal/$(BINARY_NAME) $(BIN_DIR)/; \
+	else \
+		cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/; \
+	fi
 	@echo "Generating and installing Zsh completion script to $(COMPLETION_DIR)..."
 	@mkdir -p $(COMPLETION_DIR)
 	@$(BIN_DIR)/$(BINARY_NAME) completion zsh > $(COMPLETION_DIR)/_$(BINARY_NAME)
