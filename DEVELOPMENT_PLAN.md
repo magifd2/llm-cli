@@ -4,14 +4,15 @@ This document outlines the future development roadmap and planned feature enhanc
 
 ## Short-Term Goals
 
-### 1. Google Cloud Platform (GCP) Vertex AI Generative AI - Re-attempt Integration
+### 1. Google Cloud Platform (GCP) Vertex AI Generative AI - Integration (Completed)
 
-- **Objective**: Integrate `llm-cli` with GCP Vertex AI's Generative AI services.
-- **Lessons Learned from Previous Attempt**: Analyze the reasons for the previous failure (e.g., authentication issues, API format mismatches, SDK usage). Focus on robust error handling and clear debugging outputs.
-- **Target Models**: Initially focus on text-based models (e.g., `gemini-pro`).
-- **Implementation Strategy**: 
-  - Research and understand the latest Vertex AI API documentation for generative models.
-  - Implement a dedicated provider file (e.g., `gcp_vertex_ai.go`) within `internal/llm/`.
+- **Objective**: Integrated `llm-cli` with GCP Vertex AI's Generative AI services.
+- **Status**: Completed as of `v0.0.5`. The integration involved addressing authentication issues, API format mismatches, and proper SDK usage.
+- **Target Models**: Supports text-based models (e.g., `gemini-pro`).
+- **Implementation Details**: 
+  - Implemented a dedicated provider file (`vertexai.go`) within `internal/llm/`.
+  - Ensured proper authentication mechanisms (e.g., service accounts) are supported.
+  - Implemented both buffered and streaming chat functionalities.
   - Ensure proper authentication mechanisms (e.g., service accounts, ADC) are supported.
   - Implement both buffered and streaming chat functionalities.
 

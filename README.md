@@ -4,7 +4,7 @@
 
 ## Features
 
-*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), and Amazon Bedrock.
+*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), Amazon Bedrock, and Google Cloud Vertex AI.
 *   **Profile Management**: Save multiple LLM configurations (endpoints, models, API keys) as profiles and easily switch between them.
 *   **Flexible Input**: Pass prompts via command-line arguments, files, or standard input (pipes).
 *   **Streaming Display**: Display responses from the LLM in real-time using the `--stream` flag.
