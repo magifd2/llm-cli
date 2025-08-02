@@ -2,6 +2,22 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Enhancements: DoS Protection, Configuration Consistency, and Profile Check Command)
+
+- **Objective**: To address critical issues related to DoS protection and configuration handling, and to introduce a new utility for profile management.
+- **Key Issues Addressed**:
+    1.  **Incorrect Standard Input Handling for System Prompts**: Previously, system prompts could incorrectly read from standard input, leading to unexpected behavior. This was fixed by refactoring `loadPrompt` into `loadUserPrompt` and `loadSystemPrompt` in `cmd/prompt.go`, ensuring system prompts never consume stdin.
+    2.  **Memory Safety Vulnerability**: The application would load entire files into memory before checking size limits, posing a DoS risk. `readAndProcessStream` in `cmd/prompt.go` was modified to stop reading input once `MaxPromptSizeBytes` is reached, even in "warn" mode, preventing excessive memory consumption.
+    3.  **Lack of UTF-8 Safety**: String truncation for size limiting was not UTF-8 aware, potentially corrupting multi-byte characters. `truncateStringByBytes` in `cmd/prompt.go` was updated to correctly handle UTF-8 characters during truncation.
+    4.  **Configuration Backward Compatibility**: Older configuration files might lack the `Limits` section, leading to inconsistent behavior. `internal/config/config.go` was modified to ensure the `Limits` struct is always initialized with default values when loading configurations, guaranteeing consistent behavior across all profiles.
+- **New Feature: `llm-cli profile check` Command**:
+    - Introduced a new subcommand under `profile` to verify and migrate configuration profiles.
+    - It inspects all profiles and prompts the user to update `limits` settings that are at their default zero values (indicating they might be from an older version or not explicitly set).
+    - Includes a `--confirm` (`-y`) flag for non-interactive operation.
+    - Before saving any changes, it creates a timestamped backup of the `config.json` file in `~/.config/llm-cli/backups/`, enhancing data safety.
+    - The `profile show` command was also enhanced to display `limits` information.
+- **Outcome**: The application is now more robust against DoS attacks, provides better backward compatibility for configurations, and offers a new tool for users to manage their profiles effectively. All identified issues from `DEVELOPMENT_LOG.md` related to DoS protection and configuration handling have been addressed.
+
 ## v0.0.8 Development Cycle: Known Issues to Address
 
 - **Objective**: To fix critical bugs related to input handling and size limiting that were discovered in the v0.0.7 release.
