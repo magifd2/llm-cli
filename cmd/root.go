@@ -35,7 +35,7 @@ import (
 // アプリケーション名、バージョン、短い説明、長い説明を定義します。
 var rootCmd = &cobra.Command{
 	Use:   "llm-cli",
-	Version: "ver.0.0.5",
+	Version: "ver.0.0.6",
 	Short: "A CLI tool for interacting with various LLM providers.",
 	Long: `llm-cli is a powerful command-line interface tool designed for seamless interaction with various Large Language Model (LLM) providers.
 It supports providers such as Ollama, LM Studio (OpenAI compatible API), Amazon Bedrock, and Google Cloud Vertex AI.

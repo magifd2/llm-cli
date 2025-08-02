@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## Unreleased
+## v0.0.6 - 2025-08-02
+
+### ✨ Features
+*   **Vulnerability Check Integration**: Added `govulncheck` to Makefile and integrated it into the build process to automatically scan for known vulnerabilities.
+*   **macOS Ad-hoc Signing**: Implemented ad-hoc signing for macOS universal binaries in the Makefile to allow execution on machines other than the build machine.
 
 ### 🐛 Bug Fixes
 *   **Build Fix**: Corrected a syntax error in `cmd/list.go` where the `os` package import was missing quotes, resolving persistent "missing import path" build errors.
