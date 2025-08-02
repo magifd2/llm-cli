@@ -15,12 +15,12 @@ PREFIX?=/usr/local
 BIN_DIR=$(PREFIX)/bin
 COMPLETION_DIR=$(PREFIX)/share/zsh/site-functions # Zsh specific, adjust for others
 
-.PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all
+.PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all vulncheck
 
 all: build cross-compile
 
 # Build for the current OS/Arch
-build:
+build: vulncheck
 	@echo "Building for $(shell go env GOOS)/$(shell go env GOARCH)..."
 	@mkdir -p $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)
 	@$(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) .
@@ -34,6 +34,11 @@ test:
 lint:
 	@echo "Running linters..."
 	@$(GOCMD) run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run ./...
+
+# Run vulnerability check
+vulncheck:
+	@echo "Running vulnerability check..."
+	@$(GOCMD) run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
 # Clean up build artifacts
 clean:
