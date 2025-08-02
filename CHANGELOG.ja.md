@@ -7,10 +7,13 @@
 *   **`profile add` コマンドの機能拡張**: `profile add` コマンドで、プロバイダー、モデル、エンドポイント、APIキー、AWS認証情報、GCPプロジェクトID、ロケーション、クレデンシャルファイルパスなどのパラメータを一括して指定できるようになりました。
 
 ### ♻️ Refactor
+*   **Vertex AI SDK の移行**: `google.golang.org/genai` SDK の最新バージョンに移行しました。サービスアカウント認証の修正、`Client` オブジェクトの正しい利用、ストリーミングイテレータの適切な処理を含みます。
 *   **クレデンシャルファイルパスの実行時展開**: `credentials_file` のパス展開を、設定時ではなく実行時に行うように変更しました。これにより、動的なホームディレクトリ環境でも柔軟に対応できるようになりました。
 
 ### 📝 Documentation
-*   **関連ドキュメントの更新**: `README.ja.md` および `DEVELOPING_PROVIDERS.ja.md` を、Vertex AI プロバイダーの追加と `profile add` コマンドの機能拡張に合わせて更新しました。
+*   **関連ドキュメントの更新**: `README.ja.md` および `README.en.md` を、Vertex AI プロバイダーの追加と `profile add` コマンドの機能拡張、システムプロンプトの扱いについて更新しました。
+*   **プロバイダー開発ガイドの修正**: `DEVELOPING_PROVIDERS.ja.md` および `DEVELOPING_PROVIDERS.en.md` から、特定のプロバイダー実装に関する記述を削除しました。
+*   **変更履歴の更新**: `CHANGELOG.ja.md` および `CHANGELOG.en.md` を更新しました。
 
 ### ♻️ Refactor
 *   **コード監査と品質改善**: コード全体の監査を実施し、潜在的な不具合や脆弱性を修正しました。`profile edit`のコマンドインジェクション対策、設定パス管理の一元化、エラーメッセージの改善など、堅牢性と保守性を向上させました。

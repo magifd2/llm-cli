@@ -103,12 +103,19 @@ func (p *VertexAIProvider) Chat(systemPrompt, userPrompt string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	// defer client.Close() を削除
 
 	// Chatオブジェクトを生成
 	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil) // モデルIDを直接渡す
 	if err != nil {
 		return "", fmt.Errorf("error creating chat: %w", err)
+	}
+
+	// システムプロンプトがある場合、最初に送信
+	if systemPrompt != "" {
+		_, err := chat.SendMessage(ctx, genai.Part{Text: systemPrompt})
+		if err != nil {
+			return "", fmt.Errorf("error sending system prompt to vertexai: %w", err)
+		}
 	}
 
 	resp, err := chat.SendMessage(ctx, genai.Part{Text: userPrompt})
@@ -125,12 +132,19 @@ func (p *VertexAIProvider) ChatStream(ctx context.Context, systemPrompt, userPro
 	if err != nil {
 		return err
 	}
-	// defer client.Close() を削除
 
 	// Chatオブジェクトを生成
 	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil) // モデルIDを直接渡す
 	if err != nil {
 		return fmt.Errorf("error creating chat: %w", err)
+	}
+
+	// システムプロンプトがある場合、最初に送信
+	if systemPrompt != "" {
+		_, err := chat.SendMessage(ctx, genai.Part{Text: systemPrompt})
+		if err != nil {
+			return fmt.Errorf("error sending system prompt to vertexai: %w", err)
+		}
 	}
 
 	for resp, err := range chat.SendMessageStream(ctx, genai.Part{Text: userPrompt}) { // for ... range 構文を使用

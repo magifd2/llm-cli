@@ -129,26 +129,4 @@ func (p *MyProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt st
 
 これらの手順の後、ユーザーはプロファイルで `provider: my_provider` と設定することで、あなたの新しい実装を使用できるようになります。
 
-### ステップ4: Vertex AI プロバイダーの実装
 
-Google Cloud Vertex AI プロバイダーは、`internal/llm/vertexai.go` に実装されています。このプロバイダーは、`cloud.google.com/go/vertexai/genai` ライブラリを使用して Vertex AI API と対話します。
-
-**認証:**
-認証は、プロファイルで `credentials_file` が指定されている場合はそのサービスアカウントキーを使用し、指定されていない場合は Application Default Credentials (ADC) を使用します。`credentials_file` には `~` (チルダ) を含むパスを指定でき、これは実行時にユーザーのホームディレクトリに展開されます。
-
-**必要なプロファイル設定:**
-Vertex AI プロバイダーを使用するには、以下の設定がプロファイルに必要です。
-
-*   `provider`: `vertexai`
-*   `model`: 使用する Vertex AI モデルのID (例: `gemini-1.5-pro-001`)
-*   `project_id`: GCP プロジェクトID
-*   `location`: Vertex AI エンドポイントのリージョン (例: `us-central1`)
-*   `credentials_file`: (任意) サービスアカウントキーのJSONファイルへのパス
-
-**実装のポイント:**
-*   `newVertexAIClient` 関数内で、`project_id` と `location` の検証が行われます。
-*   `credentials_file` が指定されている場合、`option.WithCredentialsFile()` を使用して認証を行います。
-*   `Chat` および `ChatStream` メソッドは、`genai.GenerativeModel` を使用してコンテンツを生成します。
-*   `SystemInstruction` (単数形) フィールドを使用してシステムプロンプトを設定します。
-
-```

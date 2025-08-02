@@ -163,7 +163,11 @@ llm-cli profile use my-vertex-ai
 Your service account needs permissions to invoke Vertex AI models.
 *   `Vertex AI User` role
 
+**System Prompt Handling:**
+Vertex AI's GenAI SDK does not directly support system prompts. Therefore, `llm-cli` simulates system prompt behavior by sending the system prompt content as the first message in the chat, followed by the user prompt content.
+
 ## Command Reference
+
 
 ### `llm-cli prompt`
 
