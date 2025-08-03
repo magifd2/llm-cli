@@ -218,7 +218,12 @@ func showProfile(profile config.Profile, name string) {
 		fmt.Printf("  Location: %s\n", profile.Location)
 	}
 	if profile.CredentialsFile != "" {
-		fmt.Printf("  CredentialsFile: %s\n", profile.CredentialsFile)
+		resolvedPath, err := config.ResolvePath(profile.CredentialsFile)
+		if err != nil {
+			fmt.Printf("  CredentialsFile: %s (Error resolving path: %v)\n", profile.CredentialsFile, err)
+		} else {
+			fmt.Printf("  CredentialsFile: %s (Resolved: %s)\n", profile.CredentialsFile, resolvedPath)
+		}
 	}
 	// Display Limits if enabled or if any limit is non-zero/non-empty
 	if profile.Limits.Enabled ||

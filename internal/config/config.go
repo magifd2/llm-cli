@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt" // Add this line
 	"os"
 	"path/filepath"
 )
@@ -30,7 +31,7 @@ type Profile struct {
 	AWSSecretAccessKey string `json:"aws_secret_access_key,omitempty"` // AWS Secret Access Key for Bedrock.
 	ProjectID          string `json:"project_id,omitempty"`      // GCP Project ID for Vertex AI.
 	Location           string `json:"location,omitempty"`        // GCP Location for Vertex AI.
-	CredentialsFile    string `json:"credentials_file,omitempty"` // Path to GCP credentials file for Vertex AI (e.g., service account key).
+	CredentialsFile    string `json:"credentials_file,omitempty"` // Path to a credentials file (e.g., service account key for GCP, or AWS credentials JSON).
 	Limits             Limits `json:"limits,omitempty"`
 }
 
@@ -126,4 +127,17 @@ func GetConfigPath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(home, configDir, configFile), nil
+}
+
+// ResolvePath expands the tilde (~) to the user's home directory if present
+// and returns the absolute path.
+func ResolvePath(p string) (string, error) {
+	if len(p) > 0 && p[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("failed to get user home directory: %w", err)
+		}
+		p = filepath.Join(home, p[1:])
+	}
+	return filepath.Abs(p)
 }

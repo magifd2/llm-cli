@@ -104,8 +104,15 @@ func newBedrockClient(ctx context.Context, profile appconfig.Profile) (*bedrockr
 	// Set the AWS region from the profile.
 	opts = append(opts, config.WithRegion(profile.AWSRegion))
 
-	// If AWS access key ID and secret access key are provided, use static credentials.
-	if profile.AWSAccessKeyID != "" && profile.AWSSecretAccessKey != "" {
+	// If AWS credentials file is provided, load credentials from it.
+	if profile.CredentialsFile != "" { // Changed from profile.AWSCredentialsFile
+		creds, err := loadAWSCredentialsFromFile(profile.CredentialsFile) // Changed from profile.AWSCredentialsFile
+		if err != nil {
+			return nil, fmt.Errorf("failed to load AWS credentials from file %s: %w", profile.CredentialsFile, err) // Changed from profile.AWSCredentialsFile
+		}
+		opts = append(opts, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(creds.AWSAccessKeyID, creds.AWSSecretAccessKey, "")))
+	} else if profile.AWSAccessKeyID != "" && profile.AWSSecretAccessKey != "" {
+		// If AWS access key ID and secret access key are provided directly, use static credentials.
 		opts = append(opts, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(profile.AWSAccessKeyID, profile.AWSSecretAccessKey, "")))
 	}
 
@@ -287,4 +294,34 @@ func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, 
 	}
 
 	return nil
+}
+
+// awsCredentials represents the structure of the AWS credentials JSON file.
+type awsCredentials struct {
+	AWSAccessKeyID     string `json:"aws_access_key_id"`
+	AWSSecretAccessKey string `json:"aws_secret_access_key"`
+}
+
+// loadAWSCredentialsFromFile loads AWS credentials from a specified JSON file.
+func loadAWSCredentialsFromFile(filePath string) (*awsCredentials, error) {
+	resolvedPath, err := appconfig.ResolvePath(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve credentials file path %s: %w", filePath, err)
+	}
+
+	data, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read credentials file %s: %w", resolvedPath, err)
+	}
+
+	var creds awsCredentials
+	if err := json.Unmarshal(data, &creds); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal credentials from file %s: %w", resolvedPath, err)
+	}
+
+	if creds.AWSAccessKeyID == "" || creds.AWSSecretAccessKey == "" {
+		return nil, fmt.Errorf("aws_access_key_id or aws_secret_access_key is missing in credentials file %s", resolvedPath)
+	}
+
+	return &creds, nil
 }
