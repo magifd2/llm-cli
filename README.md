@@ -311,7 +311,7 @@ Manages configuration profiles.
 |            | `--aws-secret-access-key <key>`: AWS Secret Access Key for Bedrock                                      |
 |            | `--project-id <id>`: GCP Project ID for Vertex AI                                                       |
 |            | `--location <location>`: GCP Location for Vertex AI                                                     |
-|            | `--credentials-file <path>`: Path to a credentials file (for GCP service account or AWS Bedrock).       |
+|            | `--credentials-file <path>`: Path to a credentials file (for GCP service account, AWS Bedrock, or OpenAI API Key).       |
 |            | `--limits-enabled <bool>`: Enable or disable limits for this profile. (Default: `true`)                 |
 |            | `--limits-on-input-exceeded <action>`: Action for input limit: `stop` or `warn`. (Default: `stop`)       |
 |            | `--limits-on-output-exceeded <action>`: Action for output limit: `stop` or `warn`. (Default: `stop`)      |

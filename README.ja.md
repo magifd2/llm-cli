@@ -311,7 +311,7 @@ llm-cli profile check
 |            | `--aws-secret-access-key <key>`: BedrockのAWSシークレットアクセスキー                                      |
 |            | `--project-id <id>`: Vertex AIのGCPプロジェクトID                                                       |
 |            | `--location <location>`: Vertex AIのGCPロケーション                                                     |
-|            | `--credentials-file <path>`: クレデンシャルファイルへのパス（GCPサービスアカウントまたはAWS Bedrock用）。       |
+|            | `--credentials-file <path>`: クレデンシャルファイルへのパス（GCPサービスアカウント、AWS Bedrock、またはOpenAI APIキー用）。       |
 |            | `--limits-enabled <bool>`: このプロファイルの制限を有効または無効にします。（デフォルト: `true`）                 |
 |            | `--limits-on-input-exceeded <action>`: 入力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）       |
 |            | `--limits-on-output-exceeded <action>`: 出力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）      |
