@@ -79,6 +79,7 @@ var checkCmd = &cobra.Command{
 	Short: "Check and migrate configuration profiles",
 	Long: `Checks all configuration profiles for consistency, especially for newly introduced settings like 'limits'.
 If a profile's settings are found to be at their default zero values (indicating they might be from an older version or not explicitly set), 
+
 the command will prompt to update them to the current standard default values.`, 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		confirm, _ := cmd.Flags().GetBool("confirm")
@@ -90,6 +91,21 @@ the command will prompt to update them to the current standard default values.`,
 
 		modified := false
 		for name, profile := range cfg.Profiles {
+			// Check for missing credentials file
+			if profile.CredentialsFile != "" {
+				resolvedPath, err := config.ResolvePath(profile.CredentialsFile)
+				if err != nil {
+					fmt.Printf("Profile '%s': Error resolving credentials file path '%s': %v\n", name, profile.CredentialsFile, err)
+				} else {
+					_, err := os.Stat(resolvedPath)
+					if os.IsNotExist(err) {
+						fmt.Printf("Profile '%s': Credentials file '%s' (resolved to '%s') does not exist.\n", name, profile.CredentialsFile, resolvedPath)
+					} else if err != nil {
+						fmt.Printf("Profile '%s': Error checking credentials file '%s' (resolved to '%s'): %v\n", name, profile.CredentialsFile, resolvedPath, err)
+					}
+				}
+			}
+
 			// config.Load() now ensures Limits are initialized with defaults if zero.
 			// So, here we check if the limits are still at their default values,
 			// which might indicate they were never explicitly set by the user.

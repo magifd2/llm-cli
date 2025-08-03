@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/magifd2/llm-cli/internal/config"
@@ -65,10 +66,21 @@ func (p *OpenAIProvider) Chat(systemPrompt, userPrompt string) (string, error) {
 		return "", fmt.Errorf("error creating request: %w", err)
 	}
 
+	// Determine the API key to use (from file or direct in profile).
+	apiKey := p.Profile.APIKey
+	if p.Profile.CredentialsFile != "" {
+		fileKey, err := loadOpenAIAPIKeyFromFile(p.Profile.CredentialsFile)
+		if err != nil {
+			// Chat関数は(string, error)を返すため、エラー時はstringも返す
+			return "", fmt.Errorf("failed to load OpenAI API key from file %s: %w", p.Profile.CredentialsFile, err)
+		}
+		apiKey = fileKey
+	}
+
 	// Set necessary headers, including Content-Type and Authorization (if API key is provided).
 	req.Header.Set("Content-Type", "application/json")
-	if p.Profile.APIKey != "" {
-		req.Header.Set("Authorization", "Bearer "+p.Profile.APIKey)
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer " + apiKey)
 	}
 
 	client := &http.Client{}
@@ -142,10 +154,21 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPromp
 		return fmt.Errorf("error creating request: %w", err)
 	}
 
+	// Determine the API key to use (from file or direct in profile).
+	apiKey := p.Profile.APIKey
+	if p.Profile.CredentialsFile != "" {
+		fileKey, err := loadOpenAIAPIKeyFromFile(p.Profile.CredentialsFile)
+		if err != nil {
+			// ChatStream関数はerrorのみを返すため、エラー時はerrorのみ返す
+			return fmt.Errorf("failed to load OpenAI API key from file %s: %w", p.Profile.CredentialsFile, err)
+		}
+		apiKey = fileKey
+	}
+
 	// Set necessary headers, including Content-Type and Authorization (if API key is provided).
 	req.Header.Set("Content-Type", "application/json")
-	if p.Profile.APIKey != "" {
-		req.Header.Set("Authorization", "Bearer "+p.Profile.APIKey)
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer " + apiKey)
 	}
 
 	client := &http.Client{}
@@ -200,4 +223,33 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPromp
 	}
 
 	return nil
+}
+
+// openAIAPIKey represents the structure of the OpenAI API key JSON file.
+type openAIAPIKey struct {
+	OpenAIAPIKey string `json:"openai_api_key"`
+}
+
+// loadOpenAIAPIKeyFromFile loads OpenAI API key from a specified JSON file.
+func loadOpenAIAPIKeyFromFile(filePath string) (string, error) {
+	resolvedPath, err := config.ResolvePath(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve credentials file path %s: %w", filePath, err)
+	}
+
+	data, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read credentials file %s: %w", resolvedPath, err)
+	}
+
+	var key openAIAPIKey
+	if err := json.Unmarshal(data, &key); err != nil {
+		return "", fmt.Errorf("failed to unmarshal credentials from file %s: %w", resolvedPath, err)
+	}
+
+	if key.OpenAIAPIKey == "" {
+		return "", fmt.Errorf("openai_api_key is missing in credentials file %s", resolvedPath)
+	}
+
+	return key.OpenAIAPIKey, nil
 }

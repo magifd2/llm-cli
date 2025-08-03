@@ -116,11 +116,22 @@ llm-cli profile set endpoint "http://localhost:1234/v1"
 # 通常はLM Studioのモデル識別子を使用できます。
 llm-cli profile set model "gemma-2-9b-it"
 
-# (任意) OpenAI互換APIが認証を必要とする場合、APIキーを設定
+# (任意) APIキーをプロファイルに直接設定
 # llm-cli profile set api_key "YOUR_API_KEY"
+
+# (任意) OpenAI APIキー用の認証情報ファイルを使用（例: ~/.openai/api_key.json）
+# llm-cli profile set credentials-file "~/path/to/your/openai-api-key.json"
 
 # 新しく作成したプロファイルに切り替え
 llm-cli profile use lmstudio
+```
+
+**注意:** `credentials-file` には、JSONファイルに `openai_api_key` フィールドとしてAPIキーが含まれている必要があります。例：
+
+```json
+{
+  "openai_api_key": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
 ```
 
 これで、LM Studioのモデルにプロンプトを送信できます。

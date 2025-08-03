@@ -3,12 +3,26 @@
 ## [Unreleased]
 
 ### ✨ Features
+*   **OpenAI API Key File Support**: Added support for loading OpenAI API keys from a JSON file specified by `credentials-file`.
+    *   The JSON file should contain the API key under the `openai_api_key` field.
+    *   `credentials-file` takes precedence over `api_key` directly set in the profile.
+*   **Enhanced Profile Check Command**: The `llm-cli profile check` command now verifies the existence of credential files specified in profiles.
+    *   Displays warnings if a specified credential file does not exist or cannot be resolved.
 *   **Enhanced Bedrock Credentials Handling**:
     *   Refactored Bedrock credential loading to support external JSON files, improving security and reusability across profiles.
     *   Unified `CredentialsFile` field in `Profile` struct to handle both AWS and GCP credential file paths, reducing redundancy.
     *   Implemented path resolution for `CredentialsFile` to expand `~` and convert to absolute paths, enhancing security and clarity.
     *   Updated `profile show` command to display the resolved absolute path for `CredentialsFile`, providing better transparency to the user.
     *   Adjusted `profile add` and `profile set` commands to use the unified `credentials-file` option.
+
+### 🐛 Bug Fixes
+*   **Build Fix**: Resolved unused import in `cmd/root.go` that caused `govulncheck` errors during build.
+
+### 📝 Documentation
+*   **Updated READMEs**: Clarified `~` (tilde) path notation and added usage examples for OpenAI API key file support in `README.md` and `README.ja.md`.
+
+### ♻️ Refactor
+*   **Error Handling**: Centralized error handling in `main.go` and `cmd/root.go` for consistent error processing and exit codes.
 
 ## v0.0.8 - 2025-08-03
 

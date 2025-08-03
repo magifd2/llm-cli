@@ -116,11 +116,22 @@ llm-cli profile set endpoint "http://localhost:1234/v1"
 # You can typically use the model identifier from LM Studio.
 llm-cli profile set model "gemma-2-9b-it"
 
-# (Optional) Set API key if your OpenAI-compatible API requires authentication
+# (Optional) Set API key directly in the profile
 # llm-cli profile set api_key "YOUR_API_KEY"
+
+# (Optional) Use a credentials file for OpenAI API key (e.g., ~/.openai/api_key.json)
+# llm-cli profile set credentials-file "~/path/to/your/openai-api-key.json"
 
 # Switch to the newly created profile
 llm-cli profile use lmstudio
+```
+
+**Note:** For `credentials-file`, the JSON file should contain the API key under the `openai_api_key` field, like this example:
+
+```json
+{
+  "openai_api_key": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
 ```
 
 You can now send prompts to your LM Studio model.
