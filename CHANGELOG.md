@@ -16,6 +16,8 @@
     *   Adjusted `profile add` and `profile set` commands to use the unified `credentials-file` option.
 
 ### 🐛 Bug Fixes
+*   **Correct Profile Check Logic**: Fixed an issue in `llm-cli profile check` where it would unnecessarily prompt to update 'limits' settings even when they already matched standard default values.
+    *   The command now only prompts for updates if the 'limits' are at their zero value or meaningfully different from the standard defaults.
 *   **Build Fix**: Resolved unused import in `cmd/root.go` that caused `govulncheck` errors during build.
 
 ### 📝 Documentation

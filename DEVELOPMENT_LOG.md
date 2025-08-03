@@ -2,6 +2,13 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Fix: Correct Profile Check Logic for Limits Settings)
+
+- **Problem**: The `llm-cli profile check` command would unnecessarily prompt to update 'limits' settings even when they already matched standard default values.
+- **Analysis**: The logic for identifying 'default or unconfigured' limits was too broad, triggering prompts for profiles that had implicitly correct settings.
+- **Solution**: Refined the comparison logic to only prompt for updates if the 'limits' are at their zero value or meaningfully different from the standard defaults.
+- **Outcome**: Improved user experience by reducing unnecessary prompts during profile checks.
+
 ## 2025-08-03 (Feature: OpenAI API Key File Support)
 
 - **Objective**: To enhance security by allowing OpenAI API keys to be loaded from external JSON files, aligning with best practices for sensitive credential management.
