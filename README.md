@@ -158,7 +158,14 @@ llm-cli profile set aws_region "us-east-1"
 llm-cli profile use bedrock-nova
 ```
 
-**Note:** For `credentials-file`, you can specify the path to your AWS credentials JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. The JSON file should contain `aws_access_key_id` and `aws_secret_access_key` fields.
+**Note:** For `credentials-file`, you can specify the path to your AWS credentials JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. The JSON file should contain `aws_access_key_id` and `aws_secret_access_key` fields, like this example:
+
+```json
+{
+  "aws_access_key_id": "YOUR_AWS_ACCESS_KEY_ID",
+  "aws_secret_access_key": "YOUR_AWS_SECRET_ACCESS_KEY"
+}
+```
 
 **Required IAM Policies:**
 Your AWS identity must have permissions to invoke Bedrock models.

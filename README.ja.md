@@ -158,7 +158,14 @@ llm-cli profile set aws_region "us-east-1"
 llm-cli profile use bedrock-nova
 ```
 
-**注意:** `credentials-file` には、AWS認証情報JSONファイルへのパスを `~` を含む形式または絶対パスで指定できます。`~` は実行時にホームディレクトリに展開されます。JSONファイルには `aws_access_key_id` と `aws_secret_access_key` フィールドが含まれている必要があります。
+**注意:** `credentials-file` には、AWS認証情報JSONファイルへのパスを `~` を含む形式または絶対パスで指定できます。`~` は実行時にホームディレクトリに展開されます。JSONファイルには `aws_access_key_id` と `aws_secret_access_key` フィールドが含まれている必要があります。例：
+
+```json
+{
+  "aws_access_key_id": "YOUR_AWS_ACCESS_KEY_ID",
+  "aws_secret_access_key": "YOUR_AWS_SECRET_ACCESS_KEY"
+}
+```
 
 **必要なIAMポリシー:**
 AWS IDには、Bedrockモデルを呼び出す権限が必要です。
