@@ -15,7 +15,27 @@ PREFIX?=/usr/local
 BIN_DIR=$(PREFIX)/bin
 COMPLETION_DIR=$(PREFIX)/share/zsh/site-functions # Zsh specific, adjust for others
 
-.PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all vulncheck
+.PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all vulncheck help
+
+help:
+	@echo "Usage: make <command> [PREFIX=/path/to/install]"
+	@echo ""
+	@echo "Commands:"
+	@echo "  all            : Builds for current OS/Arch and cross-compiles for all platforms."
+	@echo "  build          : Builds for the current OS/Arch."
+	@echo "  test           : Runs all tests."
+	@echo "  lint           : Runs linters (golangci-lint)."
+	@echo "  vulncheck      : Runs vulnerability check (govulncheck)."
+	@echo "  clean          : Cleans up build artifacts."
+	@echo "  install        : Installs the binary and Zsh completion script."
+	@echo "  uninstall      : Uninstalls the binary and Zsh completion script."
+	@echo "  cross-compile  : Cross-compiles for all target platforms (macOS, Linux, Windows)."
+	@echo "  help           : Displays this help message."
+	@echo ""
+	@echo "Variables:"
+	@echo "  PREFIX         : Installation prefix for 'install' and 'uninstall' commands."
+	@echo "                   Defaults to /usr/local. Use PREFIX=~ for user-local installation."
+
 
 all: build cross-compile
 
