@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## v0.0.9 - 2025-08-03
 
 ### ✨ Features
 *   **OpenAI API Key File Support**: Added support for loading OpenAI API keys from a JSON file specified by `credentials-file`.
@@ -8,12 +8,6 @@
     *   `credentials-file` takes precedence over `api_key` directly set in the profile.
 *   **Enhanced Profile Check Command**: The `llm-cli profile check` command now verifies the existence of credential files specified in profiles.
     *   Displays warnings if a specified credential file does not exist or cannot be resolved.
-*   **Enhanced Bedrock Credentials Handling**:
-    *   Refactored Bedrock credential loading to support external JSON files, improving security and reusability across profiles.
-    *   Unified `CredentialsFile` field in `Profile` struct to handle both AWS and GCP credential file paths, reducing redundancy.
-    *   Implemented path resolution for `CredentialsFile` to expand `~` and convert to absolute paths, enhancing security and clarity.
-    *   Updated `profile show` command to display the resolved absolute path for `CredentialsFile`, providing better transparency to the user.
-    *   Adjusted `profile add` and `profile set` commands to use the unified `credentials-file` option.
 
 ### 🐛 Bug Fixes
 *   **Correct Profile Check Logic**: Fixed an issue in `llm-cli profile check` where it would unnecessarily prompt to update 'limits' settings even when they already matched standard default values.

@@ -47,7 +47,7 @@ This document records the detailed development history and key decisions made du
 
 ## 2025-08-03 (Feature: Enhanced Bedrock Credentials Handling and Profile Display)
 
-- **Objective**: To improve the security and reusability of Bedrock credentials by allowing them to be loaded from external JSON files, and to enhance user transparency in profile display.
+- **Objective**: To improve the security and reusability of Bedrock credentials by allowing them to be loaded from external JSON files, aligning with best practices for sensitive credential management.
 - **Key Changes & Decisions**:
     1.  **Unified `CredentialsFile`**: Initially, a separate `AWSCredentialsFile` field was considered for Bedrock. However, to reduce redundancy and maintain consistency with Vertex AI's existing `CredentialsFile`, it was decided to unify this field. The `Profile` struct now uses a single `CredentialsFile` field for both AWS and GCP credential file paths.
     2.  **External JSON Credential Files**: Bedrock credentials (`aws_access_key_id`, `aws_secret_access_key`) can now be stored in a separate JSON file, improving security by separating sensitive information from the main `config.json`.
