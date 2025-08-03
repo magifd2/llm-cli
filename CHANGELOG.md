@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### 🗑️ Removed
+*   **Zsh Completion Script Installation**: Removed the automatic installation of the Zsh completion script during `make install` due to environment-specific issues. Users can still generate the script manually using `llm-cli completion zsh`.
+
 ## v0.0.9 - 2025-08-03
 
 ### ✨ Features

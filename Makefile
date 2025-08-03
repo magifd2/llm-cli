@@ -8,12 +8,11 @@ GOTEST=$(GOCMD) test
 BINARY_NAME=llm-cli
 OUTPUT_DIR=bin
 # LDFLAGS for smaller binaries (-s strips symbol table, -w strips DWARF debug info)
-LDFLAGS=-ldflags="-s -w"
+LDFLAGS=-ldflags "-s -w"
 
 # Installation paths
 PREFIX?=/usr/local
 BIN_DIR=$(PREFIX)/bin
-COMPLETION_DIR=$(PREFIX)/share/zsh/site-functions # Zsh specific, adjust for others
 
 .PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all vulncheck help
 
@@ -27,8 +26,8 @@ help:
 	@echo "  lint           : Runs linters (golangci-lint)."
 	@echo "  vulncheck      : Runs vulnerability check (govulncheck)."
 	@echo "  clean          : Cleans up build artifacts."
-	@echo "  install        : Installs the binary and Zsh completion script."
-	@echo "  uninstall      : Uninstalls the binary and Zsh completion script."
+	@echo "  install        : Installs the binary."
+	@echo "  uninstall      : Uninstalls the binary."
 	@echo "  cross-compile  : Cross-compiles for all target platforms (macOS, Linux, Windows)."
 	@echo "  help           : Displays this help message."
 	@echo ""
@@ -68,7 +67,7 @@ clean:
 	@rm -rf $(OUTPUT_DIR)
 	@rm -f extract_release_notes.go release_notes.txt
 
-# Install the binary and completion scripts
+# Install the binary
 # Usage: make install (installs to /usr/local/bin)
 #        make install PREFIX=~ (installs to ~/bin)
 install: build
@@ -79,20 +78,15 @@ install: build
 	else \
 		cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/; \
 	fi
-	@echo "Generating and installing Zsh completion script to $(COMPLETION_DIR)..."
-	@mkdir -p $(COMPLETION_DIR)
-	@$(BIN_DIR)/$(BINARY_NAME) completion zsh > $(COMPLETION_DIR)/_$(BINARY_NAME)
-	@echo "Installation complete. Remember to run 'compinit' in Zsh or restart your shell."
+	@echo "Installation complete."
 
-# Uninstall the binary and completion scripts
+# Uninstall the binary
 # Note: This does NOT remove configuration files (e.g., ~/.config/llm-cli/config.json).
 # Usage: make uninstall (uninstalls from /usr/local/bin)
 #        make uninstall PREFIX=~ (uninstalls from ~/bin)
 uninstall:
 	@echo "Uninstalling $(BINARY_NAME) from $(BIN_DIR)..."
 	@rm -f $(BIN_DIR)/$(BINARY_NAME)
-	@echo "Removing Zsh completion script from $(COMPLETION_DIR)..."
-	@rm -f $(COMPLETION_DIR)/_$(BINARY_NAME)
 	@echo "Uninstallation complete. Configuration files are kept."
 
 # Cross-compile for all target platforms

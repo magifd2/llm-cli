@@ -2,6 +2,22 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Removed: Zsh Completion Script Installation)
+
+- **Objective**: To improve installation reliability and reduce environment-specific issues by removing the automatic Zsh completion script
+      installation from `make install`.
+- **Problem**: The previous implementation of Zsh completion script installation was prone to errors (`Is a directory`, `not a directory`) due to
+      variations in shell interpretation of paths and `make` variable expansion, leading to `make install` failures in certain environments.
+- **Key Changes & Decisions**:
+    - Decided to remove the automatic installation of the Zsh completion script from the `Makefile`.
+    - Users can still manually generate the completion script using `llm-cli completion zsh` and place it in their desired location.
+- **Implementation Details**:
+    - `Makefile`: Removed `COMPLETION_DIR` variable. Removed all lines related to Zsh completion script generation, directory creation, and
+      installation from the `install` target. Removed corresponding cleanup lines from the `uninstall` target. Updated the `help` message to reflect this
+      change.
+- **Outcome**: `make install` is now more robust and less prone to environment-specific failures. Users who require Zsh completion can still set it
+      up manually.
+
 ## 2025-08-03 (Fix: Correct Profile Check Logic for Limits Settings)
 
 - **Problem**: The `llm-cli profile check` command would unnecessarily prompt to update 'limits' settings even when they already matched standard default values.
