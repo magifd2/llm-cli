@@ -21,8 +21,16 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/magifd2/llm-cli/cmd"
+import (
+	"fmt"
+	"os"
+
+	"github.com/magifd2/llm-cli/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 }

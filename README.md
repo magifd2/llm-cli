@@ -59,6 +59,8 @@ To uninstall `llm-cli` and its completion script, use `make uninstall` with the 
 
 **Note:** The uninstallation process does NOT remove your configuration files located at `~/.config/llm-cli/config.json`.
 
+**Note on Path Notation:** The `~` (tilde) character is a common shorthand for the user's home directory. `llm-cli` correctly expands this to the appropriate home directory path on all supported operating systems (Linux, macOS, Windows), ensuring cross-platform compatibility.
+
 ## Quick Start
 
 Once installed and configured, you can immediately start interacting with your LLM.

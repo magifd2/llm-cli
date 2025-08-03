@@ -54,11 +54,8 @@ This tool simplifies the process of experimenting with and utilizing different L
 // This is called by main.main() and should only be called once.
 // Executeは全ての子コマンドをルートコマンドに追加し、フラグを適切に設定します。
 // これはmain.main()から呼び出され、一度だけ呼び出されるべきです。
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
+func Execute() error {
+	return rootCmd.Execute()
 }
 
 // init function is called before main.
