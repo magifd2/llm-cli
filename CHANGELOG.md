@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### ✨ Features
+*   **Enhanced Bedrock Credentials Handling**:
+    *   Refactored Bedrock credential loading to support external JSON files, improving security and reusability across profiles.
+    *   Unified `CredentialsFile` field in `Profile` struct to handle both AWS and GCP credential file paths, reducing redundancy.
+    *   Implemented path resolution for `CredentialsFile` to expand `~` and convert to absolute paths, enhancing security and clarity.
+    *   Updated `profile show` command to display the resolved absolute path for `CredentialsFile`, providing better transparency to the user.
+    *   Adjusted `profile add` and `profile set` commands to use the unified `credentials-file` option.
+
 ## v0.0.8 - 2025-08-03
 
 ### ✨ Features

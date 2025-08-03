@@ -2,6 +2,21 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-03 (Feature: Enhanced Bedrock Credentials Handling and Profile Display)
+
+- **Objective**: To improve the security and reusability of Bedrock credentials by allowing them to be loaded from external JSON files, and to enhance user transparency in profile display.
+- **Key Changes & Decisions**:
+    1.  **Unified `CredentialsFile`**: Initially, a separate `AWSCredentialsFile` field was considered for Bedrock. However, to reduce redundancy and maintain consistency with Vertex AI's existing `CredentialsFile`, it was decided to unify this field. The `Profile` struct now uses a single `CredentialsFile` field for both AWS and GCP credential file paths.
+    2.  **External JSON Credential Files**: Bedrock credentials (`aws_access_key_id`, `aws_secret_access_key`) can now be stored in a separate JSON file, improving security by separating sensitive information from the main `config.json`.
+    3.  **Path Resolution and Security**: Implemented `config.ResolvePath` to handle `~` (tilde) expansion and convert relative paths to absolute paths for credential files. This addresses potential path injection vulnerabilities and ensures consistent file access.
+    4.  **Enhanced `profile show` Transparency**: The `profile show` command was updated to display not only the configured `CredentialsFile` path but also its resolved absolute path. This provides users with clear visibility into which file the application is actually accessing, addressing concerns about path interpretation.
+    5.  **CLI Command Adjustments**: `profile add` and `profile set` commands were updated to use the unified `credentials-file` option for setting credential file paths for Bedrock profiles.
+- **Implementation Details**:
+    - `internal/config/config.go`: `AWSCredentialsFile` removed, `CredentialsFile` comment updated. `ResolvePath` function added for path expansion and resolution.
+    - `internal/llm/bedrock_nova.go`: `newBedrockClient` now uses `profile.CredentialsFile` and calls `loadAWSCredentialsFromFile` (which utilizes `config.ResolvePath`) to load AWS credentials from the specified JSON file.
+    - `cmd/set.go` & `cmd/add.go`: Removed specific references to `aws_credentials_file` and ensured `credentials-file` is used for Bedrock.
+- **Outcome**: The application now offers a more secure and flexible way to manage Bedrock credentials, aligning with best practices for sensitive data handling. The improved transparency in `profile show` enhances user trust and understanding of file operations.
+
 ## 2025-08-03 (Enhancements: DoS Protection, Configuration Consistency, and Profile Check Command)
 
 - **Objective**: To address critical issues related to DoS protection and configuration handling, and to introduce a new utility for profile management.

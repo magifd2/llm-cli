@@ -128,8 +128,9 @@ llm-cli profile use lmstudio
 Amazon Bedrockを利用するには、有効なAWS認証情報とリージョンの指定が必要です。
 
 **認証情報の優先順位:**
-1.  `llm-cli` プロファイルに直接設定された認証情報（`aws_access_key_id`, `aws_secret_access_key`）。
-2.  標準のAWS SDK認証情報チェーン（環境変数、共有認証情報ファイル、IAMロールなど）。
+1.  `llm-cli` プロファイルで指定された `credentials-file` からロードされた認証情報。
+2.  `llm-cli` プロファイルに直接設定された認証情報（`aws_access_key_id`, `aws_secret_access_key`）。
+3.  標準のAWS SDK認証情報チェーン（環境変数、共有認証情報ファイル、IAMロールなど）。
 
 **設定手順:**
 
@@ -150,9 +151,14 @@ llm-cli profile set aws_region "us-east-1"
 # llm-cli profile set aws_access_key_id "YOUR_KEY_ID"
 # llm-cli profile set aws_secret_access_key "YOUR_SECRET_KEY"
 
+# (任意) Bedrock用の認証情報ファイルを使用（例: ~/.aws/credentials.json）
+# llm-cli profile set credentials-file "~/path/to/your/aws-credentials.json"
+
 # Bedrockプロファイルに切り替え
 llm-cli profile use bedrock-nova
 ```
+
+**注意:** `credentials-file` には、AWS認証情報JSONファイルへのパスを `~` を含む形式または絶対パスで指定できます。`~` は実行時にホームディレクトリに展開されます。JSONファイルには `aws_access_key_id` と `aws_secret_access_key` フィールドが含まれている必要があります。
 
 **必要なIAMポリシー:**
 AWS IDには、Bedrockモデルを呼び出す権限が必要です。
@@ -199,7 +205,7 @@ llm-cli profile add my-vertex-ai \
 llm-cli profile use my-vertex-ai
 ```
 
-**注意:** `credentials-file` には、サービスアカウントキーのJSONファイルへのパスを `~` を含む形式または絶対パスで指定してください。
+**注意:** `credentials-file` には、サービスアカウントキーのJSONファイルへのパスを `~` を含む形式または絶対パスで指定してください。このフィールドは、AWS Bedrockの認証情報ファイルにも使用されるようになりました。
 
 **必要なIAMロール:**
 サービスアカウントには、Vertex AIモデルを呼び出す権限が必要です。
@@ -207,6 +213,7 @@ llm-cli profile use my-vertex-ai
 
 **システムプロンプトの扱い:**
 Vertex AIのGenAI SDKでは、システムプロンプトに直接対応する機能がありません。そのため、`llm-cli` では、チャットの最初のメッセージとしてシステムプロンプトの内容を送信し、その後にユーザープロンプトの内容を送信することで、擬似的にシステムプロンプトに対応しています。
+
 
 ### サイズと使用量の制限（DoS対策）
 
@@ -284,7 +291,7 @@ llm-cli profile check
 |            | `--aws-secret-access-key <key>`: BedrockのAWSシークレットアクセスキー                                      |
 |            | `--project-id <id>`: Vertex AIのGCPプロジェクトID                                                       |
 |            | `--location <location>`: Vertex AIのGCPロケーション                                                     |
-|            | `--credentials-file <path>`: Vertex AIのGCPクレデンシャルファイルへのパス                                 |
+|            | `--credentials-file <path>`: クレデンシャルファイルへのパス（GCPサービスアカウントまたはAWS Bedrock用）。       |
 |            | `--limits-enabled <bool>`: このプロファイルの制限を有効または無効にします。（デフォルト: `true`）                 |
 |            | `--limits-on-input-exceeded <action>`: 入力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）       |
 |            | `--limits-on-output-exceeded <action>`: 出力制限のアクション: `stop` または `warn`。（デフォルト: `stop`）      |

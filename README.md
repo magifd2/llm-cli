@@ -128,8 +128,9 @@ You can now send prompts to your LM Studio model.
 To use Amazon Bedrock, you need valid AWS credentials and a specified region.
 
 **Credential Precedence:**
-1.  Credentials set directly in the `llm-cli` profile (`aws_access_key_id`, `aws_secret_access_key`).
-2.  Standard AWS SDK credential chain (e.g., environment variables, shared credentials file, IAM roles).
+1.  Credentials loaded from a specified `credentials-file` in the `llm-cli` profile.
+2.  Credentials set directly in the `llm-cli` profile (`aws_access_key_id`, `aws_secret_access_key`).
+3.  Standard AWS SDK credential chain (e.g., environment variables, shared credentials file, IAM roles).
 
 **Configuration Steps:**
 
@@ -150,9 +151,14 @@ llm-cli profile set aws_region "us-east-1"
 # llm-cli profile set aws_access_key_id "YOUR_KEY_ID"
 # llm-cli profile set aws_secret_access_key "YOUR_SECRET_KEY"
 
+# (Optional) Use a credentials file for Bedrock (e.g., ~/.aws/credentials.json)
+# llm-cli profile set credentials-file "~/path/to/your/aws-credentials.json"
+
 # Switch to the Bedrock profile
 llm-cli profile use bedrock-nova
 ```
+
+**Note:** For `credentials-file`, you can specify the path to your AWS credentials JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. The JSON file should contain `aws_access_key_id` and `aws_secret_access_key` fields.
 
 **Required IAM Policies:**
 Your AWS identity must have permissions to invoke Bedrock models.
@@ -199,7 +205,7 @@ llm-cli profile add my-vertex-ai \
 llm-cli profile use my-vertex-ai
 ```
 
-**Note:** For `credentials-file`, you can specify the path to your service account key JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime.
+**Note:** For `credentials-file`, you can specify the path to your service account key JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. This field is now also used for AWS Bedrock credentials files.
 
 **Required IAM Roles:**
 Your service account needs permissions to invoke Vertex AI models.
@@ -285,7 +291,7 @@ Manages configuration profiles.
 |            | `--aws-secret-access-key <key>`: AWS Secret Access Key for Bedrock                                      |
 |            | `--project-id <id>`: GCP Project ID for Vertex AI                                                       |
 |            | `--location <location>`: GCP Location for Vertex AI                                                     |
-|            | `--credentials-file <path>`: Path to GCP credentials file for Vertex AI                                 |
+|            | `--credentials-file <path>`: Path to a credentials file (for GCP service account or AWS Bedrock).       |
 |            | `--limits-enabled <bool>`: Enable or disable limits for this profile. (Default: `true`)                 |
 |            | `--limits-on-input-exceeded <action>`: Action for input limit: `stop` or `warn`. (Default: `stop`)       |
 |            | `--limits-on-output-exceeded <action>`: Action for output limit: `stop` or `warn`. (Default: `stop`)      |
