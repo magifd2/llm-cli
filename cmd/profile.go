@@ -78,7 +78,7 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check and migrate configuration profiles",
 	Long: `Checks all configuration profiles for consistency, especially for newly introduced settings like 'limits'.
-If a profile's settings are found to be at their default zero values (indicating they might be from an older version or not explicitly set), 
+If a profile's settings are found to be at their default zero values (indicating they might be from an older version or not explicitly set),
 
 the command will prompt to update them to the current standard default values.`, 
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -106,11 +106,8 @@ the command will prompt to update them to the current standard default values.`,
 				}
 			}
 
-			// config.Load() now ensures Limits are initialized with defaults if zero.
-			// So, here we check if the limits are still at their default values,
-			// which might indicate they were never explicitly set by the user.
-			// We offer to "migrate" them by re-saving the default values.
-			defaultLimits := config.Limits{
+			// Define the standard default limits for comparison
+			standardDefaultLimits := config.Limits{
 				Enabled:              true,
 				OnInputExceeded:      "stop",
 				OnOutputExceeded:     "stop",
@@ -118,28 +115,37 @@ the command will prompt to update them to the current standard default values.`,
 				MaxResponseSizeBytes: 20971520, // 20MB
 			}
 
-			if profile.Limits == (config.Limits{}) || // Check if it's the zero value
-								(profile.Limits.Enabled == defaultLimits.Enabled &&
-									 profile.Limits.OnInputExceeded == defaultLimits.OnInputExceeded &&
-									 profile.Limits.OnOutputExceeded == defaultLimits.OnOutputExceeded &&
-									 profile.Limits.MaxPromptSizeBytes == defaultLimits.MaxPromptSizeBytes &&
-									 profile.Limits.MaxResponseSizeBytes == defaultLimits.MaxResponseSizeBytes) {
-				fmt.Printf("Profile '%s' has default or unconfigured 'limits' settings.\n", name)
-				if !confirm {
-					fmt.Printf("Do you want to update them to standard default values? (y/N): ")
-					var response string
-					fmt.Scanln(&response)
-					if ! (response == "y" || response == "Y") {
-						fmt.Printf("Skipping profile '%s'.\n", name)
-						continue
+			// Check if current profile's limits are different from standard defaults
+			// or if they are the zero value (indicating they were never explicitly set)
+			if profile.Limits != standardDefaultLimits {
+				// If limits are the zero value, or if they are different from standard defaults,
+				// and they are not already explicitly set to something else, prompt for update.
+				// This condition ensures we don't prompt if user has intentionally set custom limits.
+				if profile.Limits == (config.Limits{}) || (profile.Limits.Enabled == standardDefaultLimits.Enabled &&
+					 profile.Limits.OnInputExceeded == standardDefaultLimits.OnInputExceeded &&
+					 profile.Limits.OnOutputExceeded == standardDefaultLimits.OnOutputExceeded &&
+					 profile.Limits.MaxPromptSizeBytes == standardDefaultLimits.MaxPromptSizeBytes &&
+					 profile.Limits.MaxResponseSizeBytes == standardDefaultLimits.MaxResponseSizeBytes) {
+					
+					fmt.Printf("Profile '%s' has default or unconfigured 'limits' settings.\n", name)
+					if !confirm {
+						fmt.Printf("Do you want to update them to standard default values? (y/N): ")
+						var response string
+						fmt.Scanln(&response)
+						if ! (response == "y" || response == "Y") {
+							fmt.Printf("Skipping profile '%s'.\n", name)
+							continue
+						}
 					}
+					profile.Limits = standardDefaultLimits
+					cfg.Profiles[name] = profile
+					modified = true
+					fmt.Printf("Profile '%s' 'limits' updated to standard defaults.\n", name)
+				} else {
+					fmt.Printf("Profile '%s' 'limits' settings are configured.\n", name)
 				}
-				profile.Limits = defaultLimits
-				cfg.Profiles[name] = profile
-				modified = true
-				fmt.Printf("Profile '%s' 'limits' updated to standard defaults.\n", name)
 			} else {
-				fmt.Printf("Profile '%s' 'limits' settings are configured.\n", name)
+				fmt.Printf("Profile '%s' 'limits' settings are up-to-date.\n", name)
 			}
 		}
 
