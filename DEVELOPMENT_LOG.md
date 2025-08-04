@@ -2,6 +2,19 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-05 (Fix: Incorrect Versioning and Release Process Improvement)
+
+- **Problem**: The released binary showed an incorrect version (`v0.0.10-alpha` or `v0.0.9`) instead of the intended `v0.0.10`. This was caused by two separate issues:
+    1.  **Hardcoded Version**: The version string was initially hardcoded in `cmd/root.go`.
+    2.  **Incorrect Git Tag Association**: After amending a commit, the `v0.0.10` Git tag was not moved to the new commit, causing the build system to pick up the previous version tag (`v0.0.9`).
+- **Solution**:
+    1.  **Dynamic Versioning**: Modified `cmd/root.go` to use a variable for the version string. Updated the `Makefile` to dynamically inject the latest Git tag into this variable at build time using `-ldflags`.
+    2.  **Corrected Git Tag**: The incorrect `v0.0.10` tag was deleted locally and remotely, then re-tagged on the correct commit and pushed again.
+- **Process Improvement**: To prevent future release errors, created a new `RELEASING.md` document.
+    - This document provides a clear, step-by-step checklist for creating a new release.
+    - It includes a safer verification step that checks the version of the binary directly from the build directory, avoiding the need to install it and potentially affect the user's system.
+- **Outcome**: The build process now correctly embeds the Git tag version into the binary. The new `RELEASING.md` guide will help ensure future releases are smooth and error-free.
+
 ## 2025-08-05 (Maintenance: Go Module Updates and Release)
 
 - **Objective**: To ensure the project's dependencies are up-to-date and to perform a new release.
