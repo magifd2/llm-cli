@@ -2,6 +2,20 @@
 
 This document records the detailed development history and key decisions made during the project.
 
+## 2025-08-05 (Maintenance: Go Module Updates and Release)
+
+- **Objective**: To ensure the project's dependencies are up-to-date and to perform a new release.
+- **Actions**:
+    - **Dependency Check**: Ran `go list -u -m all` to identify outdated Go modules.
+    - **Vulnerability Scan**: Executed `make vulncheck` to ensure no new vulnerabilities were introduced with the updates. No vulnerabilities were found.
+    - **Module Update**: Ran `go get -u ./...` to update all dependencies to their latest versions.
+    - **Tidy Modules**: Ran `go mod tidy` to clean up the `go.mod` and `go.sum` files.
+    - **Build Verification**: Performed a full build using `make all` to ensure the updated modules did not introduce any breaking changes.
+- **Release**:
+    - Updated `CHANGELOG.md` and `CHANGELOG.ja.md` with the dependency update information.
+    - Committed the changes with the message "feat: Update Go modules and bump version to v0.0.10".
+    - Created and pushed the Git tag `v0.0.10`.
+
 ## 2025-08-03 (Removed: Zsh Completion Script Installation)
 
 - **Objective**: To improve installation reliability and reduce environment-specific issues by removing the automatic Zsh completion script

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## v0.0.10 - 2025-08-05
+
+### ⬆️ Dependency Updates
+*   Updated various Go modules to their latest versions for improved performance and security.
+
 ### 🗑️ Removed
 *   **Zsh Completion Script Installation**: Removed the automatic installation of the Zsh completion script during `make install` due to environment-specific issues. Users can still generate the script manually using `llm-cli completion zsh`.
 
