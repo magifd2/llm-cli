@@ -4,7 +4,7 @@
 
 ## Features
 
-*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), Amazon Bedrock, and Google Cloud Vertex AI.
+*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), Amazon Bedrock, and Google Cloud Vertex AI (vertexai, vertexai2).
 *   **Profile Management**: Save multiple LLM configurations (endpoints, models, API keys) as profiles and easily switch between them.
 *   **Flexible Input**: Pass prompts via command-line arguments, files, or standard input (pipes).
 *   **Streaming Display**: Display responses from the LLM in real-time using the `--stream` flag.
@@ -231,8 +231,14 @@ llm-cli profile use my-vertex-ai
 Your service account needs permissions to invoke Vertex AI models.
 *   `Vertex AI User` role
 
-**System Prompt Handling:**
-Vertex AI's GenAI SDK does not directly support system prompts. Therefore, `llm-cli` simulates system prompt behavior by sending the system prompt content as the first message in the chat, followed by the user prompt content.
+**System Prompt Handling: A Workaround for the SDK**
+
+The underlying Google Cloud Vertex AI SDK does not natively support a dedicated "system prompt" field. To overcome this limitation, `llm-cli` provides two different providers, each implementing a workaround:
+
+*   **`vertexai` (Standard Workaround):** This provider implements a basic workaround by sending the system prompt as the first user message in the conversation, immediately followed by the actual user prompt.
+
+*   **`vertexai2` (Enhanced Workaround):** This provider employs a more robust workaround by using the chat history to establish a stronger context. It constructs a two-turn conversation history where the first turn is the user providing the system prompt, and the second turn is the model acknowledging it (e.g., with "OK."). This pre-establishes the desired behavior for the subsequent user prompt, leading to more consistent results. To use this enhanced method, set your profile's `provider` to `vertexai2`.
+
 
 ### Size and Usage Limits (DoS Protection)
 

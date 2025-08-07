@@ -13,13 +13,13 @@ This document outlines the step-by-step process for releasing a new version of `
 
 1.  **Determine the new version number** (e.g., `v0.1.0`). We follow Semantic Versioning.
 2.  **Update `CHANGELOG.md` and `CHANGELOG.ja.md`**: Add a new section for the release, moving changes from `[Unreleased]` to the new version section.
-3.  **Update `DEVELOPMENT_LOG.md`**: Add an entry detailing the release process and its context.
+3.  **Update Development Log**: Create a new `docs/development_logs/dev_log-YYYY-MM-DD.md` file detailing the release process and its context.
 
 ### Step 2: Commit and Tag
 
 1.  **Commit the changes**:
     ```sh
-    git add CHANGELOG.md CHANGELOG.ja.md DEVELOPMENT_LOG.md go.mod go.sum
+    git add CHANGELOG.md CHANGELOG.ja.md docs/development_logs/ go.mod go.sum
     git commit -m "feat: Release vX.Y.Z"
     ```
     *(Adjust the commit type e.g., `fix:`, `docs:` as appropriate)*

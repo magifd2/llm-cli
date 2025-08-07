@@ -22,7 +22,7 @@ type Config struct {
 // Profile defines the settings for a specific LLM provider and model.
 // It includes various parameters required to interact with different LLM services.
 type Profile struct {
-	Provider           string `json:"provider"`            // The name of the LLM provider (e.g., "ollama", "openai", "bedrock", "vertexai").
+	Provider           string `json:"provider"`            // The name of the LLM provider (e.g., "ollama", "openai", "bedrock", "vertexai", "vertexai2").
 	Endpoint           string `json:"endpoint,omitempty"`        // The API endpoint URL for the LLM service.
 	APIKey             string `json:"api_key,omitempty"`         // The API key for authentication with the LLM service.
 	Model              string `json:"model"`               // The specific model name to use (e.g., "llama3", "gpt-4", "gemini-1.5-pro-001").

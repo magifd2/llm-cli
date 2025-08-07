@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### ✨ Features
+*   **Enhanced Vertex AI Provider (`vertexai2`)**: Added a new `vertexai2` provider that offers a more robust workaround for the Vertex AI SDK's lack of native system prompt support. This provider primes the conversation by injecting the system prompt as the first turn in the chat history, leading to more consistent model behavior.
+
 ## v0.0.10 - 2025-08-05
 
 ### ⬆️ Dependency Updates
@@ -87,7 +90,7 @@
 *   **Runtime Expansion of Credential File Paths**: Changed the expansion of `credentials_file` paths to occur at runtime instead of at configuration time, providing greater flexibility in dynamic home directory environments.
 
 ### 📝 Documentation
-*   **Updated Development Log**: Added detailed history of Vertex AI SDK migration and current SDK status to `DEVELOPMENT_LOG.md`.
+*   **Updated Development Log**: Added detailed history of Vertex AI SDK migration and current SDK status to `docs/development_logs/dev_log-2025-08-02.md`.
 *   **Updated Related Documentation**: `README.ja.md` and `README.en.md` have been updated to reflect the addition of the Vertex AI provider and the enhanced `profile add` command usage, and system prompt handling approach.
 *   **Revised Provider Development Guide**: Removed specific provider implementation details from `DEVELOPING_PROVIDERS.ja.md` and `DEVELOPING_PROVIDERS.en.md`.
 *   **Updated Changelogs**: `CHANGELOG.ja.md` and `CHANGELOG.en.md` have been updated.
@@ -109,7 +112,7 @@
 *   **Command Name and Flag Refactoring**: Renamed the `ask` command to `prompt` and the `--prompt` flag to `--user-prompt`. Added shorthand flags for `--user-prompt` (`-p`), `--system-prompt` (`-P`), `--user-prompt-file` (`-f`), and `--system-prompt-file` (`-F`).
 
 ### 📝 Documentation
-*   **Added Development Log and Plan**: `DEVELOPMENT_LOG.md` and `DEVELOPMENT_PLAN.md` were added to record project history and future plans.
+*   **Added Development Log and Plan**: `docs/development_logs/` was created to record project history and future plans.
 *   **Updated Development Rules**: `GEMINI.md` was updated with new development rules (e.g., absolute paths for file operations, root cause bug fixes, documentation updates, pre-commit commits, code quality and security, comment principles).
 
 ## v0.0.2 - 2025-08-01

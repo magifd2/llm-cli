@@ -114,6 +114,8 @@ var promptCmd = &cobra.Command{
 			}
 		case "vertexai":
 			provider = &llm.VertexAIProvider{Profile: activeProfile}
+		case "vertexai2":
+			provider = &llm.VertexAI2Provider{Profile: activeProfile}
 		default:
 			fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
 			provider = &llm.MockProvider{}
