@@ -14,6 +14,9 @@ LDFLAGS=-ldflags "-s -w"
 PREFIX?=/usr/local
 BIN_DIR=$(PREFIX)/bin
 
+# OS detection
+UNAME_S := $(shell uname -s)
+
 .PHONY: all build clean test cross-compile install uninstall build-mac-universal build-linux build-windows package-all vulncheck help
 
 help:
@@ -21,12 +24,12 @@ help:
 	@echo ""
 	@echo "Commands:"
 	@echo "  all            : Builds for current OS/Arch and cross-compiles for all platforms."
-	@echo "  build          : Builds for the current OS/Arch."
+	@echo "  build          : Builds the binary for the current OS and architecture."
 	@echo "  test           : Runs all tests."
 	@echo "  lint           : Runs linters (golangci-lint)."
 	@echo "  vulncheck      : Runs vulnerability check (govulncheck)."
 	@echo "  clean          : Cleans up build artifacts."
-	@echo "  install        : Installs the binary."
+	@echo "  install        : Builds for the current architecture and installs the binary."
 	@echo "  uninstall      : Uninstalls the binary."
 	@echo "  cross-compile  : Cross-compiles for all target platforms (macOS, Linux, Windows)."
 	@echo "  help           : Displays this help message."
@@ -73,11 +76,7 @@ clean:
 install: build
 	@echo "Installing $(BINARY_NAME) to $(BIN_DIR)..."
 	@mkdir -p $(BIN_DIR)
-	@if [ "$(shell go env GOOS)" = "darwin" ]; then \
-		cp $(OUTPUT_DIR)/darwin-universal/$(BINARY_NAME) $(BIN_DIR)/; \
-	else \
-		cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/; \
-	fi
+	@cp $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) $(BIN_DIR)/
 	@echo "Installation complete."
 
 # Uninstall the binary
