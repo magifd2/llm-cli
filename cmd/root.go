@@ -25,7 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
+// version is the version of the application. It is set at build time using ldflags.
+var version = "dev"
 
 // rootCmd represents the base command for the llm-cli application.
 // It defines the application's name, version, short description, and long description.
@@ -33,7 +34,7 @@ import (
 // アプリケーション名、バージョン、短い説明、長い説明を定義します。
 var rootCmd = &cobra.Command{
 	Use:   "llm-cli",
-	Version: "v0.0.10-alpha",
+	Version: version,
 	Short: "A CLI tool for interacting with various LLM providers.",
 	Long: `llm-cli is a powerful command-line interface tool designed for seamless interaction with various Large Language Model (LLM) providers.
 It supports providers such as Ollama, LM Studio (OpenAI compatible API), Amazon Bedrock, and Google Cloud Vertex AI.

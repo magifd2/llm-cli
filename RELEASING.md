@@ -48,7 +48,7 @@ This document outlines the step-by-step process for releasing a new version of `
     ```sh
     make all
     ```
-2.  **Verify the version directly from the build output**: Instead of installing, check the version of the newly compiled binary to avoid altering your system.
+2.  **Verify the version directly from the build output**: Instead of installing, check the version of the newly compiled binary. Because the commit is tagged, the version should be clean (e.g., `vX.Y.Z`). If it shows extra information (e.g., `vX.Y.Z-1-g123abc`), it means the tag was not placed on the latest commit.
     ```sh
     # For macOS
     ./bin/darwin-universal/llm-cli -v
@@ -56,7 +56,7 @@ This document outlines the step-by-step process for releasing a new version of `
     # For Linux
     # ./bin/linux-amd64/llm-cli -v
     ```
-    The output should show the correct version number (e.g., `llm-cli version vX.Y.Z`). This confirms the version was correctly embedded during the build.
+    The output should show the correct, clean version number (e.g., `llm-cli version vX.Y.Z`). This confirms the version was correctly embedded during the build.
 
 ### Step 5: Create GitHub Release
 

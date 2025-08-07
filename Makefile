@@ -7,8 +7,11 @@ GOTEST=$(GOCMD) test
 # Project details
 BINARY_NAME=llm-cli
 OUTPUT_DIR=bin
-# LDFLAGS for smaller binaries (-s strips symbol table, -w strips DWARF debug info)
-LDFLAGS=-ldflags "-s -w"
+MODULE_PATH := $(shell go list -m)
+
+# Versioning
+VERSION := $(shell git describe --tags | sed 's/^v//')
+LDFLAGS=-ldflags "-s -w -X '$(MODULE_PATH)/cmd.version=$(VERSION)'"
 
 # Installation paths
 PREFIX?=/usr/local
@@ -39,10 +42,10 @@ help:
 	@echo "                   Defaults to /usr/local. Use PREFIX=~ for user-local installation."
 
 
-all: build cross-compile
+all: vulncheck build cross-compile
 
 # Build for the current OS/Arch
-build: vulncheck
+build:
 	@echo "Building for $(shell go env GOOS)/$(shell go env GOARCH)..."
 	@mkdir -p $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)
 	@$(GOBUILD) $(LDFLAGS) -o $(OUTPUT_DIR)/$(shell go env GOOS)-$(shell go env GOARCH)/$(BINARY_NAME) .
@@ -126,14 +129,14 @@ package-all: package-darwin package-linux package-windows
 # Package macOS binary
 package-darwin:
 	@echo "Packaging macOS binary..."
-	@cd $(OUTPUT_DIR)/darwin-universal && tar -czvf ../$(BINARY_NAME)-darwin-universal.tar.gz $(BINARY_NAME)
+	@cd $(OUTPUT_DIR)/darwin-universal && tar -czvf ../$(BINARY_NAME)-$(VERSION)-darwin-universal.tar.gz $(BINARY_NAME)
 
 # Package Linux binary
 package-linux:
 	@echo "Packaging Linux binary..."
-	@cd $(OUTPUT_DIR)/linux-amd64 && tar -czvf ../$(BINARY_NAME)-linux-amd64.tar.gz $(BINARY_NAME)
+	@cd $(OUTPUT_DIR)/linux-amd64 && tar -czvf ../$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz $(BINARY_NAME)
 
 # Package Windows binary
 package-windows:
 	@echo "Packaging Windows binary..."
-	@cd $(OUTPUT_DIR)/windows-amd64 && zip -r ../$(BINARY_NAME)-windows-amd64.zip $(BINARY_NAME).exe
+	@cd $(OUTPUT_DIR)/windows-amd64 && zip -r ../$(BINARY_NAME)-$(VERSION)-windows-amd64.zip $(BINARY_NAME).exe
