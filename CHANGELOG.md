@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## v0.0.11 - 2025-08-08
+
 ### ✨ Features
 *   **Enhanced Vertex AI Provider (`vertexai2`)**: Added a new `vertexai2` provider that offers a more robust workaround for the Vertex AI SDK's lack of native system prompt support. This provider primes the conversation by injecting the system prompt as the first turn in the chat history, leading to more consistent model behavior.
 
