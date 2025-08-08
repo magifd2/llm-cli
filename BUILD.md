@@ -47,7 +47,7 @@ The following `make` commands are available. The built binaries will be generate
 
 ### `make install`
 
-This target builds the `llm-cli` binary and installs it to a specified directory, along with the Zsh shell completion script. The default installation path is `/usr/local/bin`.
+This target builds the `llm-cli` binary and installs it to a specified directory. The default installation path is `/usr/local/bin`.
 
 *   **Default Installation (System-wide):**
     To install `llm-cli` to `/usr/local/bin` (requires `sudo`):
@@ -67,7 +67,7 @@ This target builds the `llm-cli` binary and installs it to a specified directory
     sudo make install PREFIX=/opt/llm-cli
     ```
 
-After installation, for Zsh users, you might need to run `compinit` or restart your shell for the completion script to take effect.
+After installation, you can enable shell completion by following the instructions from `llm-cli completion zsh --help`.
 
 ### `make uninstall`
 

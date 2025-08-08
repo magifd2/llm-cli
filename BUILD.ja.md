@@ -47,7 +47,7 @@ cd llm-cli
 
 ### `make install`
 
-このターゲットは、`llm-cli` バイナリをビルドし、指定されたディレクトリにZshシェル補完スクリプトと共にインストールします。デフォルトのインストールパスは `/usr/local/bin` です。
+このターゲットは、`llm-cli` バイナリをビルドし、指定されたディレクトリにインストールします。デフォルトのインストールパスは `/usr/local/bin` です。
 
 *   **デフォルトインストール（システム全体）:**
     `llm-cli` を `/usr/local/bin` にインストールする場合（`sudo` が必要です）:
@@ -67,7 +67,7 @@ cd llm-cli
     sudo make install PREFIX=/opt/llm-cli
     ```
 
-インストール後、Zshユーザーは補完スクリプトを有効にするために `compinit` を実行するか、シェルを再起動する必要がある場合があります。
+インストール後、`llm-cli completion zsh --help` の指示に従ってシェル補完を有効にできます。
 
 ### `make uninstall`
 
