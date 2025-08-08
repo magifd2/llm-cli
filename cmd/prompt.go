@@ -35,6 +35,12 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
+	"github.com/magifd2/llm-cli/internal/llm/bedrock"
+	"github.com/magifd2/llm-cli/internal/llm/ollama"
+	"github.com/magifd2/llm-cli/internal/llm/openai"
+	"github.com/magifd2/llm-cli/internal/llm/openai2"
+	"github.com/magifd2/llm-cli/internal/llm/vertexai"
+	"github.com/magifd2/llm-cli/internal/llm/vertexai2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -102,22 +108,22 @@ var promptCmd = &cobra.Command{
 		var provider llm.Provider
 		switch activeProfile.Provider {
 		case "ollama":
-			provider = &llm.OllamaProvider{Profile: activeProfile}
+			provider = &ollama.Provider{Profile: activeProfile}
 		case "openai":
-			provider = &llm.OpenAIProvider{Profile: activeProfile}
+			provider = &openai.Provider{Profile: activeProfile}
 		case "openai2":
-			provider = &llm.OpenAI2Provider{Profile: activeProfile}
+			provider = &openai2.Provider{Profile: activeProfile}
 		case "bedrock":
 			if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
-				provider = &llm.NovaBedrockProvider{Profile: activeProfile}
+				provider = &bedrock.NovaProvider{Profile: activeProfile}
 			} else {
 				fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
 				provider = &llm.MockProvider{}
 			}
 		case "vertexai":
-			provider = &llm.VertexAIProvider{Profile: activeProfile}
+			provider = &vertexai.Provider{Profile: activeProfile}
 		case "vertexai2":
-			provider = &llm.VertexAI2Provider{Profile: activeProfile}
+			provider = &vertexai2.Provider{Profile: activeProfile}
 		default:
 			fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
 			provider = &llm.MockProvider{}

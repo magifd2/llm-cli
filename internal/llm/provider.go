@@ -2,6 +2,12 @@ package llm
 
 import "context"
 
+// Message represents a single message in the chat history, with a role and content.
+type Message struct {
+	Role    string `json:"role"`    // The role of the message sender (e.g., "user", "system", "assistant").
+	Content string `json:"content"` // The content of the message.
+}
+
 // Provider defines the interface for interacting with a Large Language Model (LLM).
 // It specifies methods for both single-response chat and streaming chat interactions.
 type Provider interface {

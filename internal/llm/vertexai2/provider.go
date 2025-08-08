@@ -1,4 +1,4 @@
-package llm
+package vertexai2
 
 import (
 	"context"
@@ -8,21 +8,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/magifd2/llm-cli/internal/config"
 	"cloud.google.com/go/auth"
+	"github.com/magifd2/llm-cli/internal/config"
 	"google.golang.org/genai"
 )
 
-// VertexAIProvider implements the Provider interface for Google Cloud Vertex AI.
+// Provider implements the llm.Provider interface for Google Cloud Vertex AI.
 // This provider uses the new `google.golang.org/genai` SDK and specifies the Vertex AI backend
 // to resolve deprecation warnings and ensure compatibility.
-type VertexAIProvider struct {
+type Provider struct {
 	Profile config.Profile // The configuration profile for this Vertex AI instance.
 }
 
 // newVertexAIClient initializes a Vertex AI client based on the provided profile information.
 // It handles project ID, location, and optional service account key authentication.
-func (p *VertexAIProvider) newVertexAIClient(ctx context.Context) (*genai.Client, error) {
+func (p *Provider) newVertexAIClient(ctx context.Context) (*genai.Client, error) {
 	projectID := p.Profile.ProjectID
 	location := p.Profile.Location
 	credentialsFile := p.Profile.CredentialsFile
@@ -104,29 +104,27 @@ func expandPath(path string) (string, error) {
 }
 
 // Chat sends a chat request to the Vertex AI API and returns a single, complete response.
-// System prompts are sent as the first message in the conversation.
-func (p *VertexAIProvider) Chat(systemPrompt, userPrompt string) (string, error) {
+// System prompts are handled by priming the conversation history.
+func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	ctx := context.Background()
 	client, err := p.newVertexAIClient(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	// Create a new chat session.
-	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil)
-	if err != nil {
-		return "", fmt.Errorf("error creating chat: %w", err)
-	}
-
-	// If a system prompt is provided, send it as the first message.
+	var history []*genai.Content
 	if systemPrompt != "" {
-		_, err := chat.SendMessage(ctx, genai.Part{Text: systemPrompt})
-		if err != nil {
-			return "", fmt.Errorf("error sending system prompt to vertexai: %w", err)
+		history = []*genai.Content{
+			{Parts: []*genai.Part{{Text: systemPrompt}}, Role: genai.RoleUser},
+			{Parts: []*genai.Part{{Text: "OK."}}, Role: genai.RoleModel},
 		}
 	}
 
-	// Send the user prompt and get the response.
+	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, history)
+	if err != nil {
+		return "", fmt.Errorf("error creating chat with history: %w", err)
+	}
+
 	resp, err := chat.SendMessage(ctx, genai.Part{Text: userPrompt})
 	if err != nil {
 		return "", fmt.Errorf("error sending message to vertexai: %w", err)
@@ -135,29 +133,27 @@ func (p *VertexAIProvider) Chat(systemPrompt, userPrompt string) (string, error)
 	return extractTextFromResponse(resp), nil
 }
 
-// ChatStream sends a streaming chat request to the Vertex AI API and streams response chunks to a channel.
-// System prompts are sent as the first message in the conversation.
-func (p *VertexAIProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
+// ChatStream sends a streaming chat request to the Vertex AI API.
+// System prompts are handled by priming the conversation history.
+func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	client, err := p.newVertexAIClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Create a new chat session.
-	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, nil)
-	if err != nil {
-		return fmt.Errorf("error creating chat: %w", err)
-	}
-
-	// If a system prompt is provided, send it as the first message.
+	var history []*genai.Content
 	if systemPrompt != "" {
-		_, err := chat.SendMessage(ctx, genai.Part{Text: systemPrompt})
-		if err != nil {
-			return fmt.Errorf("error sending system prompt to vertexai: %w", err)
+		history = []*genai.Content{
+			{Parts: []*genai.Part{{Text: systemPrompt}}, Role: genai.RoleUser},
+			{Parts: []*genai.Part{{Text: "OK."}}, Role: genai.RoleModel},
 		}
 	}
 
-	// Stream the user prompt and process each response chunk.
+	chat, err := client.Chats.Create(ctx, p.Profile.Model, nil, history)
+	if err != nil {
+		return fmt.Errorf("error creating chat with history: %w", err)
+	}
+
 	for resp, err := range chat.SendMessageStream(ctx, genai.Part{Text: userPrompt}) {
 		if err != nil {
 			return fmt.Errorf("error reading stream from vertexai: %w", err)

@@ -1,4 +1,4 @@
-package llm
+package openai2
 
 import (
 	"bufio"
@@ -8,22 +8,47 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	
+	"os"
 	"strings"
 
 	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 )
 
-// OpenAI2Provider implements the Provider interface for enhanced OpenAI-compatible APIs.
+// Provider implements the llm.Provider interface for enhanced OpenAI-compatible APIs.
 // It adds support for dynamically selecting models by querying the `/v1/models` endpoint,
 // allowing for features like an "auto" mode.
-type OpenAI2Provider struct {
+type Provider struct {
 	Profile config.Profile // The configuration profile for this OpenAI-compatible instance.
 }
 
+// openAIRequest represents the JSON structure for requests to the OpenAI Chat Completions API.
+type openAIRequest struct {
+	Model    string         `json:"model"`          // The name of the model to use.
+	Messages []llm.Message `json:"messages"`       // A list of messages in the conversation history.
+	Stream   bool           `json:"stream,omitempty"` // Whether to stream the response. Omitted if false.
+}
 
+// openAIResponse represents the JSON structure for a non-streaming response from the OpenAI API.
+type openAIResponse struct {
+	Choices []struct {
+		Message llm.Message `json:"message"` // The assistant's message.
+	} `json:"choices"` // A list of chat completion choices.
+}
 
+// openAIStreamResponse represents a chunk of the streaming response from the OpenAI API.
+type openAIStreamResponse struct {
+	Choices []struct {
+		Delta struct {
+			Content string `json:"content"` // The content delta for the current chunk.
+		} `json:"delta"` // The change in content.
+	} `json:"choices"` // A list of chat completion choices (usually one for streaming).
+}
 
+// openAIAPIKey represents the structure of the OpenAI API key JSON file.
+type openAIAPIKey struct {
+	OpenAIAPIKey string `json:"openai_api_key"`
+}
 
 // openAIModelsResponse defines the structure for the response from the /v1/models endpoint.
 type openAIModelsResponse struct {
@@ -33,7 +58,7 @@ type openAIModelsResponse struct {
 }
 
 // getAPIKey retrieves the API key from the profile or a credentials file.
-func (p *OpenAI2Provider) getAPIKey() (string, error) {
+func (p *Provider) getAPIKey() (string, error) {
 	if p.Profile.CredentialsFile != "" {
 		return loadOpenAIAPIKeyFromFile(p.Profile.CredentialsFile)
 	}
@@ -41,7 +66,7 @@ func (p *OpenAI2Provider) getAPIKey() (string, error) {
 }
 
 // getAvailableModels fetches the list of available models from the /v1/models endpoint.
-func (p *OpenAI2Provider) getAvailableModels() ([]string, error) {
+func (p *Provider) getAvailableModels() ([]string, error) {
 	// Trim specific suffixes to get the base endpoint URL.
 	baseEndpoint := strings.TrimSuffix(p.Profile.Endpoint, "/v1/chat/completions")
 	baseEndpoint = strings.TrimSuffix(baseEndpoint, "/v1")
@@ -89,7 +114,7 @@ func (p *OpenAI2Provider) getAvailableModels() ([]string, error) {
 
 // resolveModel determines the final model name to use based on a prioritized list from the user's profile setting.
 // It supports combinations like "model1,auto,model2".
-func (p *OpenAI2Provider) resolveModel() (string, error) {
+func (p *Provider) resolveModel() (string, error) {
 	userModelSetting := p.Profile.Model
 	priorityList := strings.Split(userModelSetting, ",")
 
@@ -142,7 +167,7 @@ func (p *OpenAI2Provider) resolveModel() (string, error) {
 }
 
 // Chat sends a chat request to the OpenAI-compatible API and returns a single, complete response.
-func (p *OpenAI2Provider) Chat(systemPrompt, userPrompt string) (string, error) {
+func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	model, err := p.resolveModel()
 	if err != nil {
 		return "", err
@@ -153,11 +178,11 @@ func (p *OpenAI2Provider) Chat(systemPrompt, userPrompt string) (string, error) 
 		endpoint = "https://api.openai.com/v1/chat/completions"
 	}
 
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	reqBody := openAIRequest{
 		Model:    model,
@@ -208,10 +233,8 @@ func (p *OpenAI2Provider) Chat(systemPrompt, userPrompt string) (string, error) 
 	return openAIResp.Choices[0].Message.Content, nil
 }
 
-
-
 // ChatStream sends a streaming chat request to the OpenAI-compatible API and sends response chunks to a channel.
-func (p *OpenAI2Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
+func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	model, err := p.resolveModel()
 	if err != nil {
 		return err
@@ -222,11 +245,11 @@ func (p *OpenAI2Provider) ChatStream(ctx context.Context, systemPrompt, userProm
 		endpoint = "https://api.openai.com/v1/chat/completions"
 	}
 
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	reqBody := openAIRequest{
 		Model:    model,
@@ -300,6 +323,26 @@ func (p *OpenAI2Provider) ChatStream(ctx context.Context, systemPrompt, userProm
 	return nil
 }
 
+// loadOpenAIAPIKeyFromFile loads OpenAI API key from a specified JSON file.
+func loadOpenAIAPIKeyFromFile(filePath string) (string, error) {
+	resolvedPath, err := config.ResolvePath(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve credentials file path %s: %w", filePath, err)
+	}
 
+	data, err := os.ReadFile(resolvedPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read credentials file %s: %w", resolvedPath, err)
+	}
 
+	var key openAIAPIKey
+	if err := json.Unmarshal(data, &key); err != nil {
+		return "", fmt.Errorf("failed to unmarshal credentials from file %s: %w", resolvedPath, err)
+	}
 
+	if key.OpenAIAPIKey == "" {
+		return "", fmt.Errorf("openai_api_key is missing in credentials file %s", resolvedPath)
+	}
+
+	return key.OpenAIAPIKey, nil
+}

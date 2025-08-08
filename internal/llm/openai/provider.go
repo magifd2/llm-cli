@@ -1,4 +1,4 @@
-package llm
+package openai
 
 import (
 	"bufio"
@@ -12,30 +12,31 @@ import (
 	"strings"
 
 	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 )
 
-// OpenAIProvider implements the Provider interface for OpenAI-compatible APIs.
+// Provider implements the llm.Provider interface for OpenAI-compatible APIs.
 // This includes OpenAI's own API and local LLM servers like LM Studio that mimic OpenAI's API.
-type OpenAIProvider struct {
+type Provider struct {
 	Profile config.Profile // The configuration profile for this OpenAI-compatible instance.
 }
 
 // openAIRequest represents the JSON structure for requests to the OpenAI Chat Completions API.
 type openAIRequest struct {
-	Model    string    `json:"model"`          // The name of the model to use.
-	Messages []message `json:"messages"`       // A list of messages in the conversation history.
-	Stream   bool      `json:"stream,omitempty"` // Whether to stream the response. Omitted if false.
+	Model    string         `json:"model"`          // The name of the model to use.
+	Messages []llm.Message `json:"messages"`       // A list of messages in the conversation history.
+	Stream   bool           `json:"stream,omitempty"` // Whether to stream the response. Omitted if false.
 }
 
 // openAIResponse represents the JSON structure for a non-streaming response from the OpenAI API.
 type openAIResponse struct {
 	Choices []struct {
-		Message message `json:"message"` // The assistant's message.
+		Message llm.Message `json:"message"` // The assistant's message.
 	} `json:"choices"` // A list of chat completion choices.
 }
 
 // Chat sends a chat request to the OpenAI-compatible API and returns a single, complete response.
-func (p *OpenAIProvider) Chat(systemPrompt, userPrompt string) (string, error) {
+func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	// Determine the API endpoint. Use a default if not specified in the profile.
 	endpoint := p.Profile.Endpoint
 	if endpoint == "" {
@@ -43,11 +44,11 @@ func (p *OpenAIProvider) Chat(systemPrompt, userPrompt string) (string, error) {
 	}
 
 	// Build the messages array, including the system prompt if provided.
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	// Construct the request body for a non-streaming chat.
 	reqBody := openAIRequest{
@@ -120,7 +121,7 @@ type openAIStreamResponse struct {
 }
 
 // ChatStream sends a streaming chat request to the OpenAI-compatible API and sends response chunks to a channel.
-func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
+func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	// Note: The caller is responsible for closing the responseChan.
 
 	// Determine the API endpoint. Use a default if not specified in the profile.
@@ -130,11 +131,11 @@ func (p *OpenAIProvider) ChatStream(ctx context.Context, systemPrompt, userPromp
 	}
 
 	// Build the messages array, including the system prompt if provided.
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	// Construct the request body for a streaming chat.
 	reqBody := openAIRequest{

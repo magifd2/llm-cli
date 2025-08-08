@@ -1,4 +1,4 @@
-package llm
+package bedrock
 
 import (
 	"context"
@@ -14,9 +14,9 @@ import (
 	appconfig "github.com/magifd2/llm-cli/internal/config"
 )
 
-// NovaBedrockProvider implements the Provider interface for Amazon Bedrock's Anthropic Claude 3 (Nova) models.
+// NovaProvider implements the llm.Provider interface for Amazon Bedrock's Anthropic Claude 3 (Nova) models.
 // It handles authentication and communication with the Bedrock Runtime service.
-type NovaBedrockProvider struct {
+type NovaProvider struct {
 	Profile appconfig.Profile // The configuration profile for this Bedrock instance.
 }
 
@@ -128,7 +128,7 @@ func newBedrockClient(ctx context.Context, profile appconfig.Profile) (*bedrockr
 
 // Chat sends a chat request to the Amazon Bedrock API using the Messages API format.
 // It returns a single, complete response from the model.
-func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string, error) {
+func (p *NovaProvider) Chat(systemPromptText, userPrompt string) (string, error) {
 
 	ctx := context.Background()
 	// Create a new Bedrock client.
@@ -206,7 +206,7 @@ func (p *NovaBedrockProvider) Chat(systemPromptText, userPrompt string) (string,
 
 // ChatStream sends a streaming chat request to the Amazon Bedrock API using the Messages API format.
 // It streams response chunks to the provided channel.
-func (p *NovaBedrockProvider) ChatStream(ctx context.Context, systemPromptText, userPrompt string, responseChan chan<- string) error {
+func (p *NovaProvider) ChatStream(ctx context.Context, systemPromptText, userPrompt string, responseChan chan<- string) error {
 	// Note: The caller is responsible for closing the responseChan.
 
 	// Create a new Bedrock client.

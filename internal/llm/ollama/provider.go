@@ -1,4 +1,4 @@
-package llm
+package ollama
 
 import (
 	"bufio"
@@ -10,34 +10,29 @@ import (
 	"net/http"
 
 	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 )
 
-// OllamaProvider implements the Provider interface for interacting with Ollama LLMs.
-type OllamaProvider struct {
+// Provider implements the llm.Provider interface for interacting with Ollama LLMs.
+type Provider struct {
 	Profile config.Profile // The configuration profile for this Ollama instance.
 }
 
 // ollamaRequest represents the JSON structure for requests to the Ollama chat API.
 type ollamaRequest struct {
-	Model    string    `json:"model"`    // The name of the model to use.
-	Messages []message `json:"messages"` // A list of messages in the conversation history.
-	Stream   bool      `json:"stream"`   // Whether to stream the response.
-}
-
-// message represents a single message in the chat history, with a role and content.
-type message struct {
-	Role    string `json:"role"`    // The role of the message sender (e.g., "user", "system", "assistant").
-	Content string `json:"content"` // The content of the message.
+	Model    string         `json:"model"`    // The name of the model to use.
+	Messages []llm.Message `json:"messages"` // A list of messages in the conversation history.
+	Stream   bool           `json:"stream"`   // Whether to stream the response.
 }
 
 // ollamaResponse represents the JSON structure for responses from the Ollama chat API.
 // For streaming, each chunk will contain a message.
 type ollamaResponse struct {
-	Message message `json:"message"` // The message content from the LLM.
+	Message llm.Message `json:"message"` // The message content from the LLM.
 }
 
 // Chat sends a chat request to the Ollama API and returns a single, complete response.
-func (p *OllamaProvider) Chat(systemPrompt, userPrompt string) (string, error) {
+func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	// Determine the API endpoint. Use a default if not specified in the profile.
 	endpoint := p.Profile.Endpoint
 	if endpoint == "" {
@@ -45,11 +40,11 @@ func (p *OllamaProvider) Chat(systemPrompt, userPrompt string) (string, error) {
 	}
 
 	// Build the messages array, including the system prompt if provided.
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	// Construct the request body for a non-streaming chat.
 	reqBody := ollamaRequest{
@@ -86,7 +81,7 @@ func (p *OllamaProvider) Chat(systemPrompt, userPrompt string) (string, error) {
 }
 
 // ChatStream sends a streaming chat request to the Ollama API and sends response chunks to a channel.
-func (p *OllamaProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
+func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	defer close(responseChan)
 
 	// Determine the API endpoint. Use a default if not specified in the profile.
@@ -96,11 +91,11 @@ func (p *OllamaProvider) ChatStream(ctx context.Context, systemPrompt, userPromp
 	}
 
 	// Build the messages array, including the system prompt if provided.
-	messages := []message{}
+	messages := []llm.Message{}
 	if systemPrompt != "" {
-		messages = append(messages, message{Role: "system", Content: systemPrompt})
+		messages = append(messages, llm.Message{Role: "system", Content: systemPrompt})
 	}
-	messages = append(messages, message{Role: "user", Content: userPrompt})
+	messages = append(messages, llm.Message{Role: "user", Content: userPrompt})
 
 	// Construct the request body for a streaming chat.
 	reqBody := ollamaRequest{
