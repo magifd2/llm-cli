@@ -4,7 +4,7 @@
 
 ## Features
 
-*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), Amazon Bedrock, and Google Cloud Vertex AI (vertexai, vertexai2).
+*   **Multi-Provider Support**: Works seamlessly with Ollama, LM Studio (and other OpenAI-compatible APIs), Amazon Bedrock, and Google Cloud Vertex AI (vertexai, vertexai2). The `openai2` provider adds dynamic model detection.
 *   **Profile Management**: Save multiple LLM configurations (endpoints, models, API keys) as profiles and easily switch between them.
 *   **Flexible Input**: Pass prompts via command-line arguments, files, or standard input (pipes).
 *   **Streaming Display**: Display responses from the LLM in real-time using the `--stream` flag.
@@ -135,6 +135,48 @@ llm-cli profile use lmstudio
 ```
 
 You can now send prompts to your LM Studio model.
+
+##### Using the `openai2` Provider for Advanced Model Resolution
+
+For enhanced flexibility, especially with local servers like LM Studio, you can use the `openai2` provider. This provider allows you to define a prioritized list of models to use.
+
+**Configuration:**
+
+Set the `provider` to `openai2` and configure the `model` field with a comma-separated list of your preferred models. You can use the special keyword `auto` to refer to the first model detected on the server.
+
+```bash
+# Create a profile that first tries to use a specific model, but falls back to auto-detection
+llm-cli profile add lmstudio-flexible
+llm-cli profile set provider openai2
+llm-cli profile set endpoint "http://localhost:1234/v1"
+llm-cli profile set model "google/gemma-2-9b-it,auto"
+
+# Switch to the new profile
+llm-cli profile use lmstudio-flexible
+```
+
+**How it Works:**
+
+`llm-cli` processes the `model` string as a priority list, from left to right.
+
+1.  It queries the server's `/v1/models` endpoint to get a list of currently loaded models.
+2.  It then checks each item in your comma-separated list:
+    *   If the item is a **specific model name** (e.g., `google/gemma-2-9b-it`), it checks if that model is in the loaded list. If yes, it uses it, and stops.
+    *   If the item is the keyword **`auto`**, it checks if the loaded list has at least one model. If yes, it uses the *first one* from the server's list, and stops.
+3.  This continues until a valid model is found.
+
+**Example Scenarios:**
+
+*   `model: "my-favorite-model,auto"`
+    *   Tries to use `my-favorite-model` if it's loaded. If not, it uses whatever other model is loaded.
+
+*   `model: "auto,my-fallback-model"`
+    *   Tries to use the first detected model. If the server is down or no models are loaded, it will attempt to use `my-fallback-model` as a last resort (this is useful if the `/v1/models` endpoint itself fails).
+
+*   `model: "model1,model2,auto"`
+    *   A chain of preferences: tries `model1`, then `model2`, then any other available model.
+
+This powerful feature simplifies switching between models and makes your profiles more robust without needing to constantly edit them.
 
 #### 3. Amazon Bedrock
 

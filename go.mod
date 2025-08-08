@@ -12,7 +12,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/api v0.246.0
 	google.golang.org/genai v1.18.0
 )
 

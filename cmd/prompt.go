@@ -105,6 +105,8 @@ var promptCmd = &cobra.Command{
 			provider = &llm.OllamaProvider{Profile: activeProfile}
 		case "openai":
 			provider = &llm.OpenAIProvider{Profile: activeProfile}
+		case "openai2":
+			provider = &llm.OpenAI2Provider{Profile: activeProfile}
 		case "bedrock":
 			if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
 				provider = &llm.NovaBedrockProvider{Profile: activeProfile}
