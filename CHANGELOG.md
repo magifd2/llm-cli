@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## v0.0.12 - 2025-08-08
+
+### ✨ Features
+*   **Advanced OpenAI-Compatible Provider (`openai2`)**: Introduced a new `openai2` provider for OpenAI-compatible APIs (like LM Studio) that adds dynamic and flexible model resolution.
+    *   The `model` setting can now be a comma-separated priority list (e.g., `"my-model,auto"`).
+    *   The provider queries the server's `/v1/models` endpoint and uses the first available model that matches an entry in the priority list, simplifying workflows by reducing the need for frequent profile edits.
+
+### ♻️ Refactor
+*   **Provider Package Separation**: Restructured the `internal/llm` package by moving each provider into its own self-contained sub-package (e.g., `internal/llm/openai`). This major refactoring enforces strict module independence, significantly improving maintainability and paving the way for robust unit testing.
+
+
 ## v0.0.11 - 2025-08-08
 
 ### ✨ Features
