@@ -41,258 +41,123 @@ Please take a moment to review this document to understand how to contribute eff
 *   [Go](https://go.dev/doc/install) (version 1.21 or later recommended)
 *   [Git](https://git-scm.com/)
 *   `make` command
-    *   Standard on macOS/Linux.
-    *   For Windows, please install [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) or similar.
 
 ### Build Commands
 
-The following `make` commands are available. The built binaries will be generated in the `bin/` directory.
+*   **`make build`**: Builds a binary for your current OS/architecture. This is useful for local testing.
+*   **`make all`**: Runs the entire release build process, including vulnerability checks, cross-compilation for all target platforms (macOS, Linux, Windows), and packaging the binaries into release archives.
+*   **`make test`**: Runs the project's automated tests.
+*   **`make clean`**: Deletes build artifacts.
 
-*   **`make build`**
-    *   Builds a binary for the currently used OS and architecture. For macOS, this will automatically produce a universal binary (supporting both `amd64` and `arm64` architectures). The built binary will be placed in `bin/<OS>-<ARCH>/llm-cli` (or `bin/darwin-universal/llm-cli` for macOS). This is convenient for testing during development.
+### Installation
 
-*   **`make cross-compile`**
-    *   For distribution, builds binaries for multiple OS and architectures at once and creates compressed archives. The artifacts will be generated in the `bin/` directory.
-        *   `bin/llm-cli-darwin-universal.tar.gz` (macOS Universal Binary)
-        *   `bin/llm-cli-linux-amd64.tar.gz` (Linux amd64)
-        *   `bin/llm-cli-windows-amd64.zip` (Windows amd64)
+To install the binary for local use, run `make install`. This will build the binary and place it in `$(PREFIX)/bin` (default: `/usr/local/bin`).
 
-*   **`make all`**
-    *   Executes both `make build` and `make cross-compile`. Creates a binary for the current OS and architecture, as well as all cross-compiled binaries and archives.
-*   **`make test`**
-    *   Runs the project's tests.
+```bash
+# Install to /usr/local/bin (requires sudo)
+sudo make install
 
-*   **`make clean`**
-    *   Deletes the `bin/` directory and build cache.
+# Install to your user's bin directory
+make install PREFIX=~
+```
 
-### Installation and Uninstallation
-
-`llm-cli` can be installed and uninstalled using the `Makefile` targets.
-
-#### `make install`
-
-This target builds the `llm-cli` binary and installs it to a specified directory, along with the Zsh shell completion script. The default installation path is `/usr/local/bin`.
-
-*   **Default Installation (System-wide):**
-    To install `llm-cli` to `/usr/local/bin` (requires `sudo`):
-    ```bash
-    sudo make install
-    ```
-
-*   **User-local Installation:**
-    To install `llm-cli` to `~/bin` (recommended for non-root users, ensure `~/bin` is in your `PATH`):
-    ```bash
-    make install PREFIX=~
-    ```
-
-*   **Custom Directory Installation:**
-    To install `llm-cli` to a custom directory (e.g., `/opt/llm-cli`):
-    ```bash
-    sudo make install PREFIX=/opt/llm-cli
-    ```
-
-After installation, for Zsh users, you might need to run `compinit` or restart your shell for the completion script to take effect.
-
-#### `make uninstall`
-
-This target removes the `llm-cli` binary and its associated completion script from the installation directory. It is crucial to use the same `PREFIX` value that was used during installation.
-
-*   **Default Uninstallation:**
-    ```bash
-    sudo make uninstall
-    ```
-
-*   **User-local Uninstallation:**
-    ```bash
-    make uninstall PREFIX=~
-    ```
-
-*   **Custom Directory Uninstallation:
-    ```bash
-    sudo make uninstall PREFIX=/opt/llm-cli
-    ```
-
-**Note:** The uninstallation process does NOT remove your configuration files located at `~/.config/llm-cli/config.json`. These files contain your LLM profiles and are preserved across installations/uninstallations.
+To enable shell completion, follow the instructions from `llm-cli completion zsh --help` (or `bash`, `fish`, etc.).
 
 ## Code Style and Quality
 
-### Code Style and Formatting
-
 - Adhere to standard Go formatting (`gofmt`).
-- Follow idiomatic Go practices.
-- Keep functions concise and focused on a single responsibility.
-
-### Linting
-- Use `golangci-lint` for static code analysis.
-- Ensure all code passes lint checks before committing.
+- Run `make lint` to check for style issues before committing.
 
 ## Testing
 
-### Testing Principles
-
 - Write unit tests for new features and bug fixes.
-- For critical bug fixes, especially those related to core logic like API interaction or concurrency, add a regression test to prevent recurrence.
-- Ensure tests cover critical paths and edge cases.
-- Use `make test` to run tests.
+- Run `make test` to execute the test suite.
 
 ## Commit Message Guidelines
 
-### Commit Message Conventions
-
-- Use the Conventional Commits specification (e.g., `feat:`, `fix:`, `refactor:`, `docs:`).
-- For multi-line commit messages, write the message in a temporary file (e.g., `.git/COMMIT_MSG`) and use `git commit -F <file>` to avoid shell interpretation errors. This is the standard procedure.
+- Use the [Conventional Commits](https://www.conventionalcommits.org/) specification (e.g., `feat:`, `fix:`, `refactor:`, `docs:`).
 - Explain *why* a change was made, not just *what* was changed.
 
 ## Security
 
-### Security First Principle
-
-- Security is the highest priority, overriding all other considerations such as functionality or performance.
-- All code, dependencies, and configurations must be reviewed for potential security vulnerabilities before being committed.
-- Never trust user input, including environment variables. All external inputs must be validated and sanitized to prevent injection attacks.
-- Sensitive information (API keys, credentials) must never be hardcoded or stored in insecure locations.
-
-### Secure Development Lifecycle
-
-- **Threat Modeling at Design Phase:** Before implementing a new feature, consider potential threats. For example, when adding a feature that interacts with the filesystem, evaluate risks like path traversal.
-- **Security-Focused Code Reviews:** All code reviews must include a specific check for security vulnerabilities. Do not approve pull requests that have not been reviewed from a security perspective.
-- **Safe Testing Practices:** When testing for vulnerabilities, use harmless proof-of-concept payloads. Before running tests that involve external inputs like environment variables, always inspect their contents first.
-- **Dependency Scanning:** Regularly scan project dependencies for known vulnerabilities using tools like `govulncheck`.
+- Follow the **Security First Principle**: Security overrides other considerations.
+- Scan for vulnerabilities using `make vulncheck`.
+- Never hardcode sensitive information. Validate all external inputs.
 
 ## Documentation
 
-### Documentation Principles
-
-- **Language Policy**: All documentation will be written in Japanese first (as the primary source of truth) and then translated into English.
-  - The English version should include a note indicating it is a translation and that the Japanese version takes precedence in case of discrepancies.
-- **Scope**: Maintain both user-facing documents (e.g., `README`) and developer-facing documents (e.g., `DEVELOPING_PROVIDERS.md`).
-- **Maintenance**: When a feature is changed or added, ensure all relevant documentation is updated accordingly.
+- **Language Policy**: **English is the primary language** for all code, comments, and documentation. Japanese documentation is provided as a translation. In case of discrepancies, the English version takes precedence.
+- When a feature is changed or added, ensure all relevant documentation (`README.md`, `BUILD.md`, etc.) is updated accordingly.
 
 ## Adding a New LLM Provider
 
-The core of the provider system is the `Provider` interface, defined in `internal/llm/provider.go`. Any new provider must implement this interface.
+The project uses a modular, package-per-provider architecture. To add a new provider, you must create a new self-contained package.
 
-```go
-package llm
+### Step 1: Create the Provider Package
 
-import (
-	"context"
-)
+Create a new directory under `internal/llm/`. The directory name should be the name of your provider (e.g., `myprovider`).
 
-// Provider defines the interface for interacting with a Large Language Model (LLM).
-// It specifies methods for both single-response chat and streaming chat interactions.
-type Provider interface {
-	// Chat sends a single user prompt and an optional system prompt to the LLM and returns a single response.
-	Chat(systemPrompt, userPrompt string) (string, error)
-	// ChatStream sends a user prompt and an optional system prompt to the LLM and streams the response.
-	// The context allows for cancellation of the streaming operation.
-	// Response tokens are sent to the provided response channel.
-	ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error
-}
+```bash
+mkdir internal/llm/myprovider
 ```
 
-### Method Details
+### Step 2: Implement the `Provider` Interface
 
-#### `Chat(systemPrompt, userPrompt string) (string, error)`
+Inside your new directory, create a `provider.go` file. In this file, define a struct for your provider and implement the `llm.Provider` interface.
 
-*   This method handles a simple request-response cycle.
-*   It should send the `systemPrompt` (if provided) and the `userPrompt` to the LLM's API.
-*   It must block until the full response is received.
-*   It should return the complete response text as a `string`.
-*   If any error occurs (network, API error, etc.), it should return an `error`.
-
-#### `ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error`
-
-*   This method handles real-time, streaming responses.
-*   It sends the prompts to the LLM's streaming API endpoint.
-*   As response chunks (tokens) are received, they should be sent to the `responseChan` as `string`s.
-*   **Crucial Convention**: The `ChatStream` implementation must **NEVER** close the `responseChan`. The channel's lifecycle is managed by the caller in `cmd/prompt.go`. Your implementation should simply send data to it.
-*   If an error occurs at any point (before or during the stream), the function should stop processing and return an `error`.
-*   The `context.Context` should be respected to handle cancellation requests from the user (e.g., Ctrl+C).
-
----
-
-### Step-by-Step Implementation Guide
-
-Here is how to create and integrate a new provider.
-
-### Step 1: Create the Provider File
-
-Create a new file in the `internal/llm/` directory. For example, `internal/llm/my_provider.go`.
-
-### Step 2: Implement the Interface
-
-In your new file, define a struct for your provider and implement the two required methods. You can use the following template as a starting point:
-
+**`internal/llm/myprovider/provider.go`:**
 ```go
-package llm
+package myprovider
 
 import (
 	"context"
 	"fmt"
 
-	appconfig "github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 )
 
-// MyProvider implements the Provider interface for our new service.
-type MyProvider struct {
-	Profile appconfig.Profile
+// Provider implements the llm.Provider interface for MyProvider.
+type Provider struct {
+	Profile config.Profile
 }
 
-// Chat handles non-streaming requests for MyProvider.
-func (p *MyProvider) Chat(systemPrompt, userPrompt string) (string, error) {
+// Chat handles non-streaming requests.
+func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	// TODO: Implement the logic to call your provider's API.
-	// 1. Construct the request body using the prompts.
-	// 2. Send the HTTP request to the API endpoint (p.Profile.Endpoint).
-	// 3. Handle the API response, checking for errors.
-	// 4. Parse the response body to extract the message content.
-	// 5. Return the content and a nil error.
-
 	return "", fmt.Errorf("Chat not implemented for MyProvider")
 }
 
-// ChatStream handles streaming requests for MyProvider.
-func (p *MyProvider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
+// ChatStream handles streaming requests.
+func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	// TODO: Implement the logic for streaming.
-	// 1. Construct the request for a streaming response.
-	// 2. Send the HTTP request.
-	// 3. Check for API errors before starting the stream.
-	// 4. Read the response body line-by-line or chunk-by-chunk.
-	// 5. For each chunk, parse it and send the text content to responseChan.
-	// 6. Respect the context for cancellation (e.g., in your read loop).
-	// 7. If an error occurs, return it immediately.
-
-	return "", fmt.Errorf("ChatStream not implemented for MyProvider")
+	// Remember: DO NOT close the responseChan. It is managed by the caller.
+	return fmt.Errorf("ChatStream not implemented for MyProvider")
 }
-
 ```
 
 ### Step 3: Activate the Provider
 
-Finally, make the CLI aware of your new provider. Open `cmd/prompt.go` and find the `switch` statement inside the `Run` function. Add a new `case` for your provider.
+Finally, make the CLI aware of your new provider. Open `cmd/prompt.go`:
 
-```go
-// cmd/prompt.go
+1.  Add your new package to the `import` block.
+    ```go
+    import (
+        // ... other imports
+        "github.com/magifd2/llm-cli/internal/llm/myprovider"
+    )
+    ```
 
-// ...
-        var provider llm.Provider
-        switch activeProfile.Provider {
-        case "ollama":
-            provider = &llm.OllamaProvider{Profile: activeProfile}
-        case "openai":
-            provider = &llm.OpenAIProvider{Profile: activeProfile}
-        case "bedrock":
-            // ... (Bedrock logic)
+2.  Add a new `case` to the `switch` statement to instantiate your provider.
+    ```go
+    // cmd/prompt.go
+    switch activeProfile.Provider {
+    // ... other cases
+    case "myprovider": // This string must match the 'provider' value in the config
+        provider = &myprovider.Provider{Profile: activeProfile}
+    default:
+    // ...
+    }
+    ```
 
-        // Add your new provider here
-        case "my_provider": // This string must match the 'provider' value in the config
-            provider = &llm.MyProvider{Profile: activeProfile}
-
-        default:
-            fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized...\n", activeProfile.Provider)
-            provider = &llm.MockProvider{}
-        }
-// ...
-```
-
-After these steps, a user can set `provider: my_provider` in their profile, and `llm-cli` will use your new implementation.
+After these steps, a user can set `provider: myprovider` in their profile, and `llm-cli` will use your new implementation.

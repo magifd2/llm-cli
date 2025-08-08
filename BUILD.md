@@ -35,7 +35,7 @@ The following `make` commands are available. The built binaries will be generate
         *   `bin/llm-cli-windows-amd64.zip` (Windows amd64)
 
 *   **`make all`**
-    *   Executes both `make build` and `make cross-compile`. Creates a binary for the current OS and architecture, as well as all cross-compiled binaries and archives.
+    *   Runs the entire release build process. This includes running vulnerability checks, building for the current OS, cross-compiling for all target platforms, and packaging the binaries into release archives.
 *   **`make test`**
     *   Runs the project's tests.
 

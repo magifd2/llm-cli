@@ -40,7 +40,7 @@ After installation, for Zsh users, you might need to run `compinit` or restart y
 
 ### Uninstallation
 
-To uninstall `llm-cli` and its completion script, use `make uninstall` with the same `PREFIX` used during installation.
+To uninstall `llm-cli`, use `make uninstall` with the same `PREFIX` used during installation.
 
 *   **Default Uninstallation:**
     ```bash
