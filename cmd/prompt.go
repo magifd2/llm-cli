@@ -35,12 +35,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
-	"github.com/magifd2/llm-cli/internal/llm/bedrock"
-	"github.com/magifd2/llm-cli/internal/llm/ollama"
-	"github.com/magifd2/llm-cli/internal/llm/openai"
-	"github.com/magifd2/llm-cli/internal/llm/openai2"
-	"github.com/magifd2/llm-cli/internal/llm/vertexai"
-	"github.com/magifd2/llm-cli/internal/llm/vertexai2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -104,28 +98,10 @@ var promptCmd = &cobra.Command{
 			return fmt.Errorf("no user prompt provided")
 		}
 
-		// 4. Initialize provider.
-		var provider llm.Provider
-		switch activeProfile.Provider {
-		case "ollama":
-			provider = &ollama.Provider{Profile: activeProfile}
-		case "openai":
-			provider = &openai.Provider{Profile: activeProfile}
-		case "openai2":
-			provider = &openai2.Provider{Profile: activeProfile}
-		case "bedrock":
-			if strings.HasPrefix(activeProfile.Model, "amazon.nova") {
-				provider = &bedrock.NovaProvider{Profile: activeProfile}
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: Bedrock model '%s' not supported yet. Using mock provider.\n", activeProfile.Model)
-				provider = &llm.MockProvider{}
-			}
-		case "vertexai":
-			provider = &vertexai.Provider{Profile: activeProfile}
-		case "vertexai2":
-			provider = &vertexai2.Provider{Profile: activeProfile}
-		default:
-			fmt.Fprintf(os.Stderr, "Warning: Provider '%s' not recognized. Using mock provider.\n", activeProfile.Provider)
+		// 4. Initialize provider using the registry.
+		provider, err := GetProvider(activeProfile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: %v. Using mock provider.\n", err)
 			provider = &llm.MockProvider{}
 		}
 
@@ -310,7 +286,7 @@ func readAndProcessStream(r io.Reader, source string, limits config.Limits, onEx
 			// Log warning and break from loop
 			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
 			break // Stop reading further
-		}
+			}
 		buf.Write(chunk[:n])
 		totalBytes += int64(n)
 		}
