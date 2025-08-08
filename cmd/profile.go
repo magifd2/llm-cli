@@ -131,7 +131,14 @@ the command will prompt to update them to the current standard default values.`,
 					if !confirm {
 						fmt.Printf("Do you want to update them to standard default values? (y/N): ")
 						var response string
-						fmt.Scanln(&response)
+						if _, err := fmt.Scanln(&response); err != nil {
+							// Handle EOF as a 'No' answer
+							if err.Error() == "unexpected newline" || err.Error() == "EOF" {
+								fmt.Println("Skipping profile due to no input.")
+								continue
+							}
+							return fmt.Errorf("failed to read response: %w", err)
+						}
 						if ! (response == "y" || response == "Y") {
 							fmt.Printf("Skipping profile '%s'.\n", name)
 							continue
@@ -154,7 +161,14 @@ the command will prompt to update them to the current standard default values.`,
 			if !confirm {
 				fmt.Printf("Do you want to save the changes? (y/N): ")
 				var response string
-				fmt.Scanln(&response)
+				if _, err := fmt.Scanln(&response); err != nil {
+					// Handle EOF as a 'No' answer
+					if err.Error() == "unexpected newline" || err.Error() == "EOF" {
+						fmt.Println("Changes not saved due to no input.")
+						return nil
+					}
+					return fmt.Errorf("failed to read response: %w", err)
+				}
 				if ! (response == "y" || response == "Y") {
 					fmt.Println("Changes not saved.")
 					return nil
