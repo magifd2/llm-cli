@@ -122,6 +122,11 @@ type Provider struct {
 	Profile config.Profile
 }
 
+// NewProvider is a factory function that returns a new MyProvider.
+func NewProvider(p config.Profile) (llm.Provider, error) {
+	return &Provider{}, nil
+}
+
 // Chat handles non-streaming requests.
 func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 	// TODO: Implement the logic to call your provider's API.
@@ -132,9 +137,35 @@ func (p *Provider) Chat(systemPrompt, userPrompt string) (string, error) {
 func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error {
 	// TODO: Implement the logic for streaming.
 	// Remember: DO NOT close the responseChan. It is managed by the caller.
-	return fmt.Errorf("ChatStream not implemented for MyProvider")
+	return "", fmt.Errorf("ChatStream not implemented for MyProvider")
 }
 ```
+
+### Method Details
+
+#### `NewProvider(p config.Profile) (llm.Provider, error)`
+
+*   This is a factory function that all provider packages must export.
+*   It takes a `config.Profile` as input, which contains the configuration settings for the specific provider.
+*   It should return an instance of the provider (which implements the `llm.Provider` interface) and an `error` if the provider cannot be created (e.g., due to an invalid profile configuration).
+*   This function is used by the central provider registry in `cmd/providers.go` to dynamically create provider instances.
+
+#### `Chat(systemPrompt, userPrompt string) (string, error)`
+
+*   This method handles a simple request-response cycle.
+*   It should send the `systemPrompt` (if provided) and the `userPrompt` to the LLM's API.
+*   It must block until the full response is received.
+*   It should return the complete response text as a `string`.
+*   If any error occurs (network, API error, etc.), it should return an `error`.
+
+#### `ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error`
+
+*   This method handles real-time, streaming responses.
+*   It sends the prompts to the LLM's streaming API endpoint.
+*   As response chunks (tokens) are received, they should be sent to the `responseChan` as `string`s.
+*   **Crucial Convention**: The `ChatStream` implementation must **NEVER** close the `responseChan`. The channel's lifecycle is managed by the caller in `cmd/prompt.go`.
+*   If an error occurs at any point (before or during the stream), the function should stop processing and return an `error`.
+*   The `context.Context` should be respected to handle cancellation requests from the user (e.g., Ctrl+C).
 
 ### Step 3: Activate the Provider
 
