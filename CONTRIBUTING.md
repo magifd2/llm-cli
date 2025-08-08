@@ -138,7 +138,7 @@ func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt stri
 
 ### Step 3: Activate the Provider
 
-Finally, make the CLI aware of your new provider. Open `cmd/prompt.go`:
+Finally, make the CLI aware of your new provider. Open `cmd/providers.go`:
 
 1.  Add your new package to the `import` block.
     ```go
@@ -148,15 +148,12 @@ Finally, make the CLI aware of your new provider. Open `cmd/prompt.go`:
     )
     ```
 
-2.  Add a new `case` to the `switch` statement to instantiate your provider.
+2.  Add your new provider to the `providerRegistry` map.
     ```go
-    // cmd/prompt.go
-    switch activeProfile.Provider {
-    // ... other cases
-    case "myprovider": // This string must match the 'provider' value in the config
-        provider = &myprovider.Provider{Profile: activeProfile}
-    default:
-    // ...
+    // cmd/providers.go
+    var providerRegistry = map[string]providerFactory{
+        // ... other providers
+        "myprovider": myprovider.NewProvider,
     }
     ```
 

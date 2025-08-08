@@ -69,7 +69,7 @@ After installation, for Zsh users, you might need to run `compinit` or restart y
 
 ### `make uninstall`
 
-This target removes the `llm-cli` binary and its associated completion script from the installation directory. It is crucial to use the same `PREFIX` value that was used during installation.
+This target removes the `llm-cli` binary from the installation directory. It is crucial to use the same `PREFIX` value that was used during installation.
 
 *   **Default Uninstallation:**
     ```bash

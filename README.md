@@ -16,7 +16,7 @@
 
 ### Using `make install`
 
-This method builds the `llm-cli` binary and installs it to a specified directory, along with the Zsh shell completion script.
+This method builds the `llm-cli` binary and installs it to a specified directory.
 
 *   **Default Installation (System-wide):**
     To install `llm-cli` to `/usr/local/bin` (requires `sudo`):
