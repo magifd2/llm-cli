@@ -36,6 +36,8 @@ The following `make` commands are available. The built binaries will be generate
 
 *   **`make all`**
     *   Runs the entire release build process. This includes running vulnerability checks, building for the current OS, cross-compiling for all target platforms, and packaging the binaries into release archives.
+    *   **Note**: Running `make all` requires an active internet connection for the vulnerability checks (`govulncheck`). If you need to build offline, use `make build` for your current OS/architecture, or `make cross-compile` (which will skip vulnerability checks).
+
 *   **`make test`**
     *   Runs the project's tests.
 
