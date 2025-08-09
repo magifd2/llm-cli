@@ -65,7 +65,10 @@ func setProfileValue(key, value string) error {
 		return fmt.Errorf("active profile '%s' not found", cfg.CurrentProfile)
 	}
 
-	switch key {
+	// Normalize key to underscore_case for internal consistency
+	normalizedKey := strings.ReplaceAll(key, "-", "_")
+
+	switch normalizedKey {
 	case "model":
 		profile.Model = value
 	case "provider":
@@ -86,29 +89,29 @@ func setProfileValue(key, value string) error {
 		profile.Location = value
 	case "credentials_file":
 		profile.CredentialsFile = value
-	case "limits.enabled":
+	case "limits_enabled":
 		enabled, err := strconv.ParseBool(value)
 		if err != nil {
 			return fmt.Errorf("invalid boolean value for limits.enabled: %s", value)
 		}
 		profile.Limits.Enabled = enabled
-	case "limits.on_input_exceeded":
+	case "limits_on_input_exceeded":
 		if value != "stop" && value != "warn" {
 			return fmt.Errorf("invalid value for limits.on_input_exceeded: must be 'stop' or 'warn'")
 		}
 		profile.Limits.OnInputExceeded = value
-	case "limits.on_output_exceeded":
+	case "limits_on_output_exceeded":
 		if value != "stop" && value != "warn" {
 			return fmt.Errorf("invalid value for limits.on_output_exceeded: must be 'stop' or 'warn'")
 		}
 		profile.Limits.OnOutputExceeded = value
-	case "limits.max_prompt_size_bytes":
+	case "limits_max_prompt_size_bytes":
 		size, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("invalid integer value for limits.max_prompt_size_bytes: %s", value)
 		}
 		profile.Limits.MaxPromptSizeBytes = size
-	case "limits.max_response_size_bytes":
+	case "limits_max_response_size_bytes":
 		size, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("invalid integer value for limits.max_response_size_bytes: %s", value)
@@ -116,8 +119,8 @@ func setProfileValue(key, value string) error {
 		profile.Limits.MaxResponseSizeBytes = size
 	default:
 		availableKeys := []string{
-			"model", "provider", "endpoint", "api_key", "aws_region", "aws_access_key_id", "aws_secret_access_key", "project_id", "location", "credentials_file",
-			"limits.enabled", "limits.on_input_exceeded", "limits.on_output_exceeded", "limits.max_prompt_size_bytes", "limits.max_response_size_bytes",
+			"model", "provider", "endpoint", "api-key", "aws-region", "aws-access-key-id", "aws-secret-access-key", "project-id", "location", "credentials-file",
+			"limits-enabled", "limits-on-input-exceeded", "limits-on-output-exceeded", "limits-max-prompt-size-bytes", "limits-max-response-size-bytes",
 		}
 		return fmt.Errorf("unknown configuration key '%s'.\nAvailable keys: %s", key, strings.Join(availableKeys, ", "))
 	}

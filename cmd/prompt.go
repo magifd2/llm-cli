@@ -35,6 +35,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/magifd2/llm-cli/internal/config"
 	"github.com/magifd2/llm-cli/internal/llm"
+	"github.com/magifd2/llm-cli/internal/llm/mock"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -102,7 +103,7 @@ var promptCmd = &cobra.Command{
 		provider, err := GetProvider(activeProfile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: %v. Using mock provider.\n", err)
-			provider = &llm.MockProvider{}
+			provider, _ = mock.NewProvider(activeProfile)
 		}
 
 		// 5. Execute and get response.
@@ -286,7 +287,7 @@ func readAndProcessStream(r io.Reader, source string, limits config.Limits, onEx
 			// Log warning and break from loop
 			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
 			break // Stop reading further
-			}
+		}
 		buf.Write(chunk[:n])
 		totalBytes += int64(n)
 		}
@@ -314,7 +315,7 @@ func handlePromptData(data []byte, source string, limits config.Limits, onExceed
 		}
 		// Stop case should have been handled earlier for files/stdin, but as a fallback for direct values
 		return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
-	}
+		}
 
 	return sanitizedStr, nil
 }

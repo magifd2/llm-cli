@@ -36,7 +36,7 @@
     sudo make install PREFIX=/opt/llm-cli
     ```
 
-インストール後、Zshユーザーは補完スクリプトを有効にするために `compinit` を実行するか、シェルを再起動する必要がある場合があります。
+インストール後、`llm-cli completion zsh --help` の指示に従ってシェル補完を有効にできます。
 
 ### アンインストール
 

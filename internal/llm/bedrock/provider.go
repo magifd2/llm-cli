@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime/types"
 	appconfig "github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 )
 
 // NovaProvider implements the llm.Provider interface for Amazon Bedrock's Anthropic Claude 3 (Nova) models.
@@ -324,4 +326,17 @@ func loadAWSCredentialsFromFile(filePath string) (*awsCredentials, error) {
 	}
 
 	return &creds, nil
+}
+
+// NewProvider is a factory function that returns the correct Bedrock provider
+// based on the model specified in the profile.
+func NewProvider(p appconfig.Profile) (llm.Provider, error) {
+	if strings.HasPrefix(p.Model, "amazon.nova") {
+		return &NovaProvider{Profile: p}, nil
+	}
+	// Future models like Claude can be added here.
+	// if strings.HasPrefix(p.Model, "anthropic.claude") {
+	//     return &ClaudeProvider{Profile: p}, nil
+	// }
+	return nil, fmt.Errorf("model '%s' is not supported by the 'bedrock' provider yet", p.Model)
 }

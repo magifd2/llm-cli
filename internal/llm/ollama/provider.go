@@ -158,3 +158,8 @@ func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt stri
 
 	return nil
 }
+
+// NewProvider is a factory function that returns a new Ollama provider.
+func NewProvider(p config.Profile) (llm.Provider, error) {
+	return &Provider{Profile: p}, nil
+}

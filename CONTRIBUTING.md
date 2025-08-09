@@ -87,7 +87,7 @@ To enable shell completion, follow the instructions from `llm-cli completion zsh
 ## Documentation
 
 - **Language Policy**: **English is the primary language** for all code, comments, and documentation. Japanese documentation is provided as a translation. In case of discrepancies, the English version takes precedence.
-- When a feature is changed or added, ensure all relevant documentation (`README.md`, `BUILD.md`, etc.) is updated accordingly.
+- For comprehensive documentation update guidelines during releases, please refer to the [Releasing a New Version](RELEASING.md) document. When contributing features or fixes, ensure all relevant documentation (e.g., `README.md`, `BUILD.md`, `CHANGELOG.md`) is updated accordingly.
 
 ## Adding a New LLM Provider
 

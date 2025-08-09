@@ -254,3 +254,8 @@ func loadOpenAIAPIKeyFromFile(filePath string) (string, error) {
 
 	return key.OpenAIAPIKey, nil
 }
+
+// NewProvider is a factory function that returns a new OpenAI provider.
+func NewProvider(p config.Profile) (llm.Provider, error) {
+	return &Provider{Profile: p}, nil
+}

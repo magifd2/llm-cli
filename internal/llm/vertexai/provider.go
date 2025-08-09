@@ -8,8 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/magifd2/llm-cli/internal/config"
 	"cloud.google.com/go/auth"
+	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm"
 	"google.golang.org/genai"
 )
 
@@ -191,4 +192,9 @@ func extractTextFromResponse(resp *genai.GenerateContentResponse) string {
 		}
 	}
 	return sb.String()
+}
+
+// NewProvider is a factory function that returns a new VertexAI provider.
+func NewProvider(p config.Profile) (llm.Provider, error) {
+	return &Provider{Profile: p}, nil
 }

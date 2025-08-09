@@ -14,6 +14,12 @@ This document outlines the step-by-step process for releasing a new version of `
 1.  **Determine the new version number** (e.g., `v0.1.0`). We follow Semantic Versioning.
 2.  **Update `CHANGELOG.md` and `CHANGELOG.ja.md`**: Add a new section for the release, moving changes from `[Unreleased]` to the new version section.
 3.  **Update Development Log**: Create a new `docs/development_logs/dev_log-YYYY-MM-DD.md` file detailing the release process and its context.
+4.  **Review and Update All Relevant Documentation**: Ensure all documentation reflects the changes in the new release. This includes, but is not limited to:
+    *   `README.md` and `README.ja.md`: For user-facing features, configuration, and quick start guides.
+    *   `CONTRIBUTING.md`: For any changes in development setup, testing, or contribution guidelines.
+    *   `SECURITY.md`: For any updates to security policies or vulnerability reporting.
+    *   Any other relevant `docs/` files.
+    *   **Double-check for consistency**: Verify that new features, changes, or deprecations are accurately reflected across all relevant documents, including examples and command references.
 
 ### Step 2: Commit and Tag
 
