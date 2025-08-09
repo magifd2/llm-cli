@@ -351,3 +351,46 @@ func loadOpenAIAPIKeyFromFile(filePath string) (string, error) {
 func NewProvider(p config.Profile) (llm.Provider, error) {
 	return &Provider{Profile: p}, nil
 }
+
+// ValidateConfig checks if the OpenAI2 provider's configuration is valid.
+// It requires a model and, for the default OpenAI endpoint, an API key or credentials file.
+func (p *Provider) ValidateConfig() error {
+	// Model is always required.
+	if p.Profile.Model == "" {
+		return fmt.Errorf("OpenAI2 provider requires a 'model' to be specified in the profile")
+	}
+
+	// Determine the effective endpoint. If empty, it will use the default OpenAI endpoint.
+	endpoint := p.Profile.Endpoint
+	if endpoint == "" {
+		endpoint = "https://api.openai.com/v1/chat/completions"
+	}
+
+	// If using the default OpenAI endpoint, an API key or credentials file is mandatory.
+	if endpoint == "https://api.openai.com/v1/chat/completions" {
+		if p.Profile.APIKey == "" && p.Profile.CredentialsFile == "" {
+			return fmt.Errorf("OpenAI2 provider (using default endpoint) requires either 'api-key' or 'credentials-file' to be set in the profile")
+		}
+	} else {
+		// If a custom endpoint is used (e.g., LM Studio), the endpoint itself is the primary requirement.
+		// We don't strictly require API key/credentials file for custom endpoints, as they might not need it.
+		// However, the endpoint must not be empty if it's not the default.
+		if p.Profile.Endpoint == "" { // Check original Profile.Endpoint, not the resolved one
+			return fmt.Errorf("OpenAI2 provider (using custom endpoint) requires 'endpoint' to be specified in the profile")
+		}
+	}
+
+	// If a credentials file is provided, attempt to resolve its path and check existence.
+	if p.Profile.CredentialsFile != "" {
+		resolvedPath, err := config.ResolvePath(p.Profile.CredentialsFile)
+		if err != nil {
+			return fmt.Errorf("failed to resolve credentials file path %s: %w", p.Profile.CredentialsFile, err)
+		}
+		// Check if the file exists and is readable.
+		if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
+			return fmt.Errorf("credentials file not found at %s", resolvedPath)
+		}
+	}
+
+	return nil
+}

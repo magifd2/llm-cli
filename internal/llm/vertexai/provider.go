@@ -198,3 +198,32 @@ func extractTextFromResponse(resp *genai.GenerateContentResponse) string {
 func NewProvider(p config.Profile) (llm.Provider, error) {
 	return &Provider{Profile: p}, nil
 }
+
+// ValidateConfig checks if the Vertex AI provider's configuration is valid.
+// It requires a model, project ID, location, and a credentials file.
+func (p *Provider) ValidateConfig() error {
+	if p.Profile.Model == "" {
+		return fmt.Errorf("Vertex AI provider requires a 'model' to be specified in the profile")
+	}
+	if p.Profile.ProjectID == "" {
+		return fmt.Errorf("Vertex AI provider requires a 'project-id' to be specified in the profile")
+	}
+	if p.Profile.Location == "" {
+		return fmt.Errorf("Vertex AI provider requires a 'location' to be specified in the profile")
+	}
+	if p.Profile.CredentialsFile == "" {
+		return fmt.Errorf("Vertex AI provider requires a 'credentials-file' to be set in the profile")
+	}
+
+	// If a credentials file is provided, attempt to resolve its path and check existence.
+	resolvedPath, err := config.ResolvePath(p.Profile.CredentialsFile)
+	if err != nil {
+		return fmt.Errorf("failed to resolve credentials file path %s: %w", p.Profile.CredentialsFile, err)
+	}
+	// Check if the file exists and is readable.
+	if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
+		return fmt.Errorf("credentials file not found at %s", resolvedPath)
+	}
+
+	return nil
+}

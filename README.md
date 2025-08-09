@@ -366,7 +366,7 @@ Manages configuration profiles.
 |            | `--limits-max-prompt-size-bytes <bytes>`: Max prompt size in bytes. (Default: `10485760`)                |
 |            | `--limits-max-response-size-bytes <bytes>`: Max response size in bytes. (Default: `20971520`)             |
 | `set`      | Modifies a key in the current profile. `llm-cli profile set <key> <value>`. See available keys below.     |
-|            | **Available Keys:** `provider`, `model`, `endpoint`, `api_key`, `aws_region`, `aws_access_key_id`, `aws_secret_access_key`, `project_id`, `location`, `credentials_file`, `limits.enabled`, `limits.on_input_exceeded`, `limits.on_output_exceeded`, `limits.max_prompt_size_bytes`, `limits.max_response_size_bytes` |
+|            | **Available Keys:** `provider`, `model`, `endpoint`, `api-key`, `aws-region`, `aws-access-key-id`, `aws-secret-access-key`, `project-id`, `location`, `credentials-file`, `limits-enabled`, `limits-on-input-exceeded`, `limits-on-output-exceeded`, `limits-max-prompt-size-bytes`, `limits-max-response-size-bytes` |
 | `remove`   | Deletes a profile. `llm-cli profile remove <profile-name>`                                              |
 | `show`     | Shows all details of a specific profile, including limits. `llm-cli profile show [profile-name]`        |
 | `edit`     | Opens the `config.json` file in your default text editor for manual changes.                            |

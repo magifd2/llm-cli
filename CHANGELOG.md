@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### ✨ Features
+*   **Enhanced Profile Check Command with Configuration Validation**: The `llm-cli profile check` command now performs provider-specific configuration validation.
+    *   Introduced a new `llm.ConfigValidator` interface, implemented by each LLM provider.
+    *   Each provider's `ValidateConfig()` method checks for essential settings (e.g., `model`, `api-key`, `aws-region`, `project-id`, `credentials-file`) and their validity.
+    *   The `check` command now reports detailed validation errors, helping users identify and fix misconfigurations early.
+
+### ♻️ Refactor
+*   **Provider Configuration Validation Interface**: Defined `llm.ConfigValidator` interface and implemented `ValidateConfig()` method across all LLM providers (`ollama`, `openai`, `openai2`, `bedrock`, `vertexai`, `vertexai2`, `mock`) to centralize and standardize configuration validation logic.
+
 ## v0.0.12 - 2025-08-08
 
 ### ✨ Features

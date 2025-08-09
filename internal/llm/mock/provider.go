@@ -37,3 +37,8 @@ func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt stri
 	}
 	return nil
 }
+
+// ValidateConfig always returns nil for the mock provider, as it has no specific configuration requirements.
+func (p *Provider) ValidateConfig() error {
+	return nil
+}

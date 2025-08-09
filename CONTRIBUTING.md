@@ -105,6 +105,8 @@ mkdir internal/llm/myprovider
 
 Inside your new directory, create a `provider.go` file. In this file, define a struct for your provider and implement the `llm.Provider` interface.
 
+**Additionally, it is highly recommended to implement the `llm.ConfigValidator` interface for your provider.** This interface defines a `ValidateConfig()` method that allows your provider to specify and check its required configuration settings (e.g., API keys, region, project ID). Implementing this will enable the `llm-cli profile check` command to provide meaningful feedback to users about their profile configurations.
+
 **`internal/llm/myprovider/provider.go`:**
 ```go
 package myprovider
@@ -138,6 +140,16 @@ func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt stri
 	// TODO: Implement the logic for streaming.
 	// Remember: DO NOT close the responseChan. It is managed by the caller.
 	return "", fmt.Errorf("ChatStream not implemented for MyProvider")
+}
+
+// ValidateConfig checks if the MyProvider's configuration is valid.
+// Implement this to check for required fields in p.Profile.
+func (p *Provider) ValidateConfig() error {
+	// Example: if your provider requires an API key
+	// if p.Profile.APIKey == "" {
+	//     return fmt.Errorf("MyProvider requires an API key")
+	// }
+	return nil
 }
 ```
 

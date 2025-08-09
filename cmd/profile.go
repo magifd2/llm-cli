@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/magifd2/llm-cli/internal/config"
+	"github.com/magifd2/llm-cli/internal/llm" // llmパッケージをインポート
 	"github.com/spf13/cobra"
 )
 
@@ -80,7 +81,9 @@ var checkCmd = &cobra.Command{
 	Long: `Checks all configuration profiles for consistency, especially for newly introduced settings like 'limits'.
 If a profile's settings are found to be at their default zero values (indicating they might be from an older version or not explicitly set),
 
-the command will prompt to update them to the current standard default values.`, 
+the command will prompt to update them to the current standard default values.
+
+Additionally, this command now validates each profile's specific configuration (e.g., required API keys, regions) based on the selected provider.`, 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		confirm, _ := cmd.Flags().GetBool("confirm")
 
@@ -90,23 +93,41 @@ the command will prompt to update them to the current standard default values.`,
 		}
 
 		modified := false
+		var validationErrors []string
+
 		for name, profile := range cfg.Profiles {
-			// Check for missing credentials file
+			fmt.Printf("\nChecking profile '%s'...\n", name)
+
+			// --- 1. Provider-specific configuration validation ---
+			providerInstance, err := GetProvider(profile)
+			if err != nil {
+				validationErrors = append(validationErrors, fmt.Sprintf("Profile '%s': Error getting provider: %v", name, err))
+			} else {
+				if validator, ok := providerInstance.(llm.ConfigValidator); ok {
+					if err := validator.ValidateConfig(); err != nil {
+						validationErrors = append(validationErrors, fmt.Sprintf("Profile '%s': Configuration validation failed: %v", name, err))
+					}
+				} else {
+					fmt.Printf("Profile '%s': Provider '%s' does not support configuration validation.\n", name, profile.Provider)
+				}
+			}
+
+			// --- 2. Credentials file existence check ---
 			if profile.CredentialsFile != "" {
 				resolvedPath, err := config.ResolvePath(profile.CredentialsFile)
 				if err != nil {
-					fmt.Printf("Profile '%s': Error resolving credentials file path '%s': %v\n", name, profile.CredentialsFile, err)
+					validationErrors = append(validationErrors, fmt.Sprintf("Profile '%s': Error resolving credentials file path '%s': %v", name, profile.CredentialsFile, err))
 				} else {
 					_, err := os.Stat(resolvedPath)
 					if os.IsNotExist(err) {
-						fmt.Printf("Profile '%s': Credentials file '%s' (resolved to '%s') does not exist.\n", name, profile.CredentialsFile, resolvedPath)
+						validationErrors = append(validationErrors, fmt.Sprintf("Profile '%s': Credentials file '%s' (resolved to '%s') does not exist.", name, profile.CredentialsFile, resolvedPath))
 					} else if err != nil {
-						fmt.Printf("Profile '%s': Error checking credentials file '%s' (resolved to '%s'): %v\n", name, profile.CredentialsFile, resolvedPath, err)
+						validationErrors = append(validationErrors, fmt.Sprintf("Profile '%s': Error checking credentials file '%s' (resolved to '%s'): %v", name, profile.CredentialsFile, resolvedPath, err))
 					}
 				}
 			}
 
-			// Define the standard default limits for comparison
+			// --- 3. Limits settings check and migration ---
 			standardDefaultLimits := config.Limits{
 				Enabled:              true,
 				OnInputExceeded:      "stop",
@@ -115,17 +136,13 @@ the command will prompt to update them to the current standard default values.`,
 				MaxResponseSizeBytes: 20971520, // 20MB
 			}
 
-			// Check if current profile's limits are different from standard defaults
-			// or if they are the zero value (indicating they were never explicitly set)
 			if profile.Limits != standardDefaultLimits {
-				// If limits are the zero value, or if they are different from standard defaults,
-				// and they are not already explicitly set to something else, prompt for update.
-				// This condition ensures we don't prompt if user has intentionally set custom limits.
-				if profile.Limits == (config.Limits{}) || (profile.Limits.Enabled == standardDefaultLimits.Enabled &&
-					 profile.Limits.OnInputExceeded == standardDefaultLimits.OnInputExceeded &&
-					 profile.Limits.OnOutputExceeded == standardDefaultLimits.OnOutputExceeded &&
-					 profile.Limits.MaxPromptSizeBytes == standardDefaultLimits.MaxPromptSizeBytes &&
-					 profile.Limits.MaxResponseSizeBytes == standardDefaultLimits.MaxResponseSizeBytes) {
+				if profile.Limits == (config.Limits{}) || (
+					profile.Limits.Enabled == standardDefaultLimits.Enabled &&
+					profile.Limits.OnInputExceeded == standardDefaultLimits.OnInputExceeded &&
+					profile.Limits.OnOutputExceeded == standardDefaultLimits.OnOutputExceeded &&
+					profile.Limits.MaxPromptSizeBytes == standardDefaultLimits.MaxPromptSizeBytes &&
+					profile.Limits.MaxResponseSizeBytes == standardDefaultLimits.MaxResponseSizeBytes) {
 					
 					fmt.Printf("Profile '%s' has default or unconfigured 'limits' settings.\n", name)
 					if !confirm {
@@ -139,11 +156,11 @@ the command will prompt to update them to the current standard default values.`,
 							}
 							return fmt.Errorf("failed to read response: %w", err)
 						}
-						if ! (response == "y" || response == "Y") {
-							fmt.Printf("Skipping profile '%s'.\n", name)
-							continue
+							if ! (response == "y" || response == "Y") {
+								fmt.Printf("Skipping profile '%s'.\n", name)
+								continue
+							}
 						}
-					}
 					profile.Limits = standardDefaultLimits
 					cfg.Profiles[name] = profile
 					modified = true
@@ -154,6 +171,17 @@ the command will prompt to update them to the current standard default values.`,
 			} else {
 				fmt.Printf("Profile '%s' 'limits' settings are up-to-date.\n", name)
 			}
+		}
+
+		// --- End of profile loop ---
+
+		if len(validationErrors) > 0 {
+			fmt.Println("\n--- Configuration Validation Summary ---")
+			for _, errStr := range validationErrors {
+				fmt.Println(errStr)
+			}
+			fmt.Println("----------------------------------------")
+			return fmt.Errorf("configuration validation found errors")
 		}
 
 		if modified {

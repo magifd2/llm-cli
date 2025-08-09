@@ -340,3 +340,33 @@ func NewProvider(p appconfig.Profile) (llm.Provider, error) {
 	// }
 	return nil, fmt.Errorf("model '%s' is not supported by the 'bedrock' provider yet", p.Model)
 }
+
+// ValidateConfig checks if the Bedrock provider's configuration is valid.
+// It requires a model, AWS region, and either direct AWS credentials or a credentials file.
+func (p *NovaProvider) ValidateConfig() error {
+	if p.Profile.Model == "" {
+		return fmt.Errorf("Bedrock provider requires a 'model' to be specified in the profile")
+	}
+	if p.Profile.AWSRegion == "" {
+		return fmt.Errorf("Bedrock provider requires an 'aws-region' to be specified in the profile")
+	}
+
+	// Check if either direct credentials or a credentials file is provided.
+	if (p.Profile.AWSAccessKeyID == "" || p.Profile.AWSSecretAccessKey == "") && p.Profile.CredentialsFile == "" {
+		return fmt.Errorf("Bedrock provider requires either 'aws-access-key-id' and 'aws-secret-access-key' or a 'credentials-file' to be set in the profile")
+	}
+
+	// If a credentials file is provided, attempt to resolve its path and check existence.
+	if p.Profile.CredentialsFile != "" {
+		resolvedPath, err := appconfig.ResolvePath(p.Profile.CredentialsFile)
+		if err != nil {
+			return fmt.Errorf("failed to resolve credentials file path %s: %w", p.Profile.CredentialsFile, err)
+		}
+		// Check if the file exists and is readable.
+		if _, err := os.Stat(resolvedPath); os.IsNotExist(err) {
+			return fmt.Errorf("credentials file not found at %s", resolvedPath)
+		}
+	}
+
+	return nil
+}

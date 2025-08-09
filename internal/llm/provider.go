@@ -18,3 +18,9 @@ type Provider interface {
 	// Response tokens are sent to the provided response channel.
 	ChatStream(ctx context.Context, systemPrompt, userPrompt string, responseChan chan<- string) error
 }
+
+// ConfigValidator defines an interface for providers that can validate their configuration.
+// This allows the `profile check` command to verify if a profile has all necessary settings.
+type ConfigValidator interface {
+	ValidateConfig() error
+}

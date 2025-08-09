@@ -163,3 +163,16 @@ func (p *Provider) ChatStream(ctx context.Context, systemPrompt, userPrompt stri
 func NewProvider(p config.Profile) (llm.Provider, error) {
 	return &Provider{Profile: p}, nil
 }
+
+// ValidateConfig checks if the Ollama provider's configuration is valid.
+// For Ollama, no specific configuration is strictly required beyond the model name,
+// as it defaults to localhost:11434.
+func (p *Provider) ValidateConfig() error {
+	// A model name is technically required for the API call, but can be any string.
+	// If p.Profile.Model is empty, the API call will likely fail, but that's an API-level validation.
+	// For basic config validation, we can consider it valid if a model is specified.
+	if p.Profile.Model == "" {
+		return fmt.Errorf("Ollama provider requires a 'model' to be specified in the profile")
+	}
+	return nil
+}

@@ -324,7 +324,7 @@ llm-cli profile check
 |            | `--limits-max-prompt-size-bytes <bytes>`: 最大プロンプトサイズ（バイト）。（デフォルト: `10485760`）                |
 |            | `--limits-max-response-size-bytes <bytes>`: 最大レスポンスサイズ（バイト）。（デフォルト: `20971520`）             |
 | `set`      | 現在のプロファイルのキーを変更します。`llm-cli profile set <key> <value>`。利用可能なキーは以下を参照。     |
-|            | **利用可能なキー:** `provider`, `model`, `endpoint`, `api_key`, `aws_region`, `aws_access_key_id`, `aws_secret_access_key`, `project_id`, `location`, `credentials_file`, `limits.enabled`, `limits.on_input_exceeded`, `limits.on_output_exceeded`, `limits.max_prompt_size_bytes`, `limits.max_response_size_bytes` |
+|            | **利用可能なキー:** `provider`, `model`, `endpoint`, `api-key`, `aws-region`, `aws-access-key-id`, `aws-secret-access-key`, `project-id`, `location`, `credentials-file`, `limits-enabled`, `limits-on-input-exceeded`, `limits-on-output-exceeded`, `limits-max-prompt-size-bytes`, `limits-max-response-size-bytes` |
 | `remove`   | プロファイルを削除します。`llm-cli profile remove <profile-name>`                                              |
 | `show`     | 特定のプロファイルの詳細（制限設定を含む）を表示します。`llm-cli profile show [profile-name]`        |
 | `edit`     | `config.json` ファイルをデフォルトのテキストエディタで開いて手動編集します。                            |
