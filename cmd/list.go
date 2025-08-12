@@ -36,7 +36,7 @@ var listCmd = &cobra.Command{
 	Short: "List all available profiles",
 	Long:  `Lists all saved profiles and indicates which one is currently active.`, 
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 			os.Exit(1)

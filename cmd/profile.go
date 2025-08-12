@@ -52,7 +52,7 @@ var showCmd = &cobra.Command{
 	Long:  `Shows the detailed configuration for a specified profile. If no profile name is given, it shows the current active profile.`, 
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
 			os.Exit(1)
@@ -87,7 +87,7 @@ Additionally, this command now validates each profile's specific configuration (
 	RunE: func(cmd *cobra.Command, args []string) error {
 		confirm, _ := cmd.Flags().GetBool("confirm")
 
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			return fmt.Errorf("error loading config: %w", err)
 		}
@@ -209,7 +209,7 @@ Additionally, this command now validates each profile's specific configuration (
 			}
 			fmt.Println("Configuration file backed up.")
 
-			if err := cfg.Save(); err != nil {
+			if err := cfg.Save(cfgFile); err != nil {
 				return fmt.Errorf("error saving config: %w", err)
 			}
 			fmt.Println("Configuration saved successfully.")

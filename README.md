@@ -10,6 +10,14 @@
 *   **Streaming Display**: Display responses from the LLM in real-time using the `--stream` flag.
 *   **Single Binary**: Operates as a single executable file (excluding configuration files), making it easy to distribute and use.
 
+## Global Options
+
+`llm-cli` supports a global `--config` flag that can be used with any command to specify the path to the configuration file. This overrides the default location.
+
+| Flag     | Shorthand | Description                                                                 |
+| -------- | --------- | --------------------------------------------------------------------------- |
+| `--config` | `-c`      | Path to the configuration file (default is `$HOME/.config/llm-cli/config.json`). |
+
 ## Installation
 
 `llm-cli` can be easily installed using the provided `Makefile`.
@@ -75,7 +83,7 @@ llm-cli prompt "Tell me a short story about a robot who discovers music." --stre
 
 ## Configuration
 
-`llm-cli` manages all its settings in a single configuration file located at `~/.config/llm-cli/config.json`. While you can edit this file directly with `llm-cli profile edit`, it is recommended to use the `profile` subcommands.
+`llm-cli` manages all its settings in a single configuration file. By default, this file is located at `~/.config/llm-cli/config.json`. However, you can specify a custom path using the global `--config` (`-c`) flag. While you can edit this file directly with `llm-cli profile edit`, it is recommended to use the `profile` subcommands.
 
 ### Provider-Specific Setup
 
@@ -213,7 +221,7 @@ llm-cli profile set aws_region "us-east-1"
 llm-cli profile use bedrock-nova
 ```
 
-**Note:** For `credentials-file`, you can specify the path to your AWS credentials JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. The JSON file should contain `aws_access_key_id` and `aws_secret_access_key` fields, like this example:
+**Note:** For `credentials-file`, you can specify the path to your AWS credentials JSON file using `~` (tilde), an absolute path, or a path relative to the `llm-cli` configuration file. The `~` will be expanded to your home directory, and relative paths will be resolved based on the location of the `config.json` file. The JSON file should contain `aws_access_key_id` and `aws_secret_access_key` fields, like this example:
 
 ```json
 {
@@ -267,7 +275,7 @@ llm-cli profile add my-vertex-ai \
 llm-cli profile use my-vertex-ai
 ```
 
-**Note:** For `credentials-file`, you can specify the path to your service account key JSON file using `~` (tilde) or an absolute path. The `~` will be expanded to your home directory at runtime. This field is now also used for AWS Bedrock credentials files.
+**Note:** For `credentials-file`, you can specify the path to your service account key JSON file using `~` (tilde), an absolute path, or a path relative to the `llm-cli` configuration file. The `~` will be expanded to your home directory, and relative paths will be resolved based on the location of the `config.json` file. This field is now also used for AWS Bedrock credentials files.
 
 **Required IAM Roles:**
 Your service account needs permissions to invoke Vertex AI models.

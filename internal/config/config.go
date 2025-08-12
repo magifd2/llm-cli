@@ -46,13 +46,19 @@ type Limits struct {
 
 // Load reads the configuration file from the user's config directory.
 // If the file does not exist, it returns a default configuration.
-func Load() (*Config, error) {
-	configPath, err := GetConfigPath()
-	if err != nil {
-		return nil, err
+func Load(configPath string) (*Config, error) {
+	var actualConfigPath string
+	if configPath != "" {
+		actualConfigPath = configPath
+	} else {
+		var err error
+		actualConfigPath, err = GetConfigPath()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	data, err := os.ReadFile(configPath)
+	data, err := os.ReadFile(actualConfigPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// If the config file does not exist, return a default configuration.
@@ -81,6 +87,19 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	// Resolve CredentialsFile paths relative to the config file's directory
+	configDir := filepath.Dir(actualConfigPath)
+	for name, profile := range cfg.Profiles {
+		if profile.CredentialsFile != "" && !filepath.IsAbs(profile.CredentialsFile) {
+			resolvedPath, err := ResolvePath(filepath.Join(configDir, profile.CredentialsFile))
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve credentials file path for profile %s: %w", name, err)
+			}
+			profile.CredentialsFile = resolvedPath
+			cfg.Profiles[name] = profile // Update the profile in the map
+		}
+	}
+
 	// Ensure all profiles have default limits if not explicitly set
 	for name, profile := range cfg.Profiles {
 		if (profile.Limits == Limits{}) {
@@ -100,14 +119,20 @@ func Load() (*Config, error) {
 
 // Save writes the current configuration to the user's config directory.
 // It creates the directory if it does not exist.
-func (c *Config) Save() error {
-	configPath, err := GetConfigPath()
-	if err != nil {
-		return err
+func (c *Config) Save(configPath string) error {
+	var actualConfigPath string
+	if configPath != "" {
+		actualConfigPath = configPath
+	} else {
+		var err error
+		actualConfigPath, err = GetConfigPath()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Ensure the configuration directory exists.
-	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(actualConfigPath), 0700); err != nil {
 		return err
 	}
 
@@ -116,7 +141,7 @@ func (c *Config) Save() error {
 		return err
 	}
 
-	return os.WriteFile(configPath, data, 0600)
+	return os.WriteFile(actualConfigPath, data, 0600)
 }
 
 // GetConfigPath returns the absolute path to the configuration file.

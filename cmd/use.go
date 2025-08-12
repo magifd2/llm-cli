@@ -48,7 +48,7 @@ var useCmd = &cobra.Command{
 // useProfile contains the core logic for switching the active profile.
 // It loads the configuration, validates the profile name, and saves the updated configuration.
 func useProfile(profileName string) error {
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)
 	}
@@ -59,7 +59,7 @@ func useProfile(profileName string) error {
 	}
 
 	cfg.CurrentProfile = profileName
-	if err := cfg.Save(); err != nil {
+	if err := cfg.Save(cfgFile); err != nil {
 		return fmt.Errorf("saving config: %w", err)
 	}
 	return nil

@@ -51,7 +51,7 @@ func setupTestEnvironment(t *testing.T) string {
 			},
 		},
 	}
-	err := cfg.Save()
+	err := cfg.Save(cfgFile)
 	require.NoError(t, err)
 	return tempDir
 }
@@ -76,7 +76,7 @@ func TestAddCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the profile was added
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	require.NoError(t, err)
 	assert.Contains(t, cfg.Profiles, "new_profile")
 	assert.Equal(t, "ollama", cfg.Profiles["new_profile"].Provider) // Should copy from default
@@ -94,7 +94,7 @@ func TestUseCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the current profile was changed
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	require.NoError(t, err)
 	assert.Equal(t, "existing_profile", cfg.CurrentProfile)
 
@@ -111,7 +111,7 @@ func TestSetCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the model was set
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	require.NoError(t, err)
 	assert.Equal(t, "test-model-123", cfg.Profiles["default"].Model)
 
@@ -128,7 +128,7 @@ func TestRemoveCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the profile was removed
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	require.NoError(t, err)
 	assert.NotContains(t, cfg.Profiles, "existing_profile")
 
@@ -140,10 +140,10 @@ func TestRemoveCommand(t *testing.T) {
 	// (The active profile is 'default' in this setup)
 	// To test this, we need to ensure 'default' is the active profile
 	// and then try to remove it.
-	cfg, err = config.Load()
+	cfg, err = config.Load(cfgFile)
 	require.NoError(t, err)
 	cfg.CurrentProfile = "default"
-	require.NoError(t, cfg.Save())
+	require.NoError(t, cfg.Save(cfgFile))
 
 	_, _, err = executeCommand(rootCmd, "profile", "remove", "default")
 	assert.Error(t, err)

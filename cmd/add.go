@@ -38,7 +38,7 @@ var addCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		profileName := args[0]
 
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			return fmt.Errorf("Error loading config: %w", err)
 		}
@@ -108,7 +108,7 @@ var addCmd = &cobra.Command{
 
 		cfg.Profiles[profileName] = newProfile
 
-		if err := cfg.Save(); err != nil {
+		if err := cfg.Save(cfgFile); err != nil {
 			return fmt.Errorf("Error saving config: %w", err)
 		}
 

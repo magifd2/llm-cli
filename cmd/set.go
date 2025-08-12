@@ -38,7 +38,7 @@ var setCmd = &cobra.Command{
 	Long:  `Set a configuration value for the currently active profile.`,
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			return fmt.Errorf("Error loading config: %w", err)
 		}
@@ -55,7 +55,7 @@ var setCmd = &cobra.Command{
 // setProfileValue updates a specific key-value pair in the currently active profile.
 // It handles different configuration keys and returns an error for unknown keys.
 func setProfileValue(key, value string) error {
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)
 	}
@@ -126,7 +126,7 @@ func setProfileValue(key, value string) error {
 	}
 
 	cfg.Profiles[cfg.CurrentProfile] = profile
-	if err := cfg.Save(); err != nil {
+	if err := cfg.Save(cfgFile); err != nil {
 		return fmt.Errorf("saving config: %w", err)
 	}
 	return nil

@@ -35,7 +35,7 @@ func TestLoad_DefaultConfig(t *testing.T) {
 	t.Setenv("HOME", tempDir)
 
 	// When no config file exists, Load should return the default config
-	cfg, err := Load()
+	cfg, err := Load("")
 	require.NoError(t, err)
 
 	// Assert that the default values are correct
@@ -82,7 +82,7 @@ func TestSaveAndLoad_Cycle(t *testing.T) {
 	}
 
 	// 2. Save the config
-	err := originalCfg.Save()
+	err := originalCfg.Save("")
 	require.NoError(t, err)
 
 	// Verify the file was actually created
@@ -91,7 +91,7 @@ func TestSaveAndLoad_Cycle(t *testing.T) {
 	assert.FileExists(t, configPath)
 
 	// 3. Load the config back from the file
-	loadedCfg, err := Load()
+	loadedCfg, err := Load("")
 	require.NoError(t, err)
 
 	// 4. Assert that the loaded config is identical to the original

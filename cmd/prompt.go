@@ -47,7 +47,7 @@ var promptCmd = &cobra.Command{
 	Long:  `Sends a prompt to the configured LLM and prints the response.`, // Corrected: Removed unnecessary escaping of backticks
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// 1. Load configuration and determine the active profile.
-		cfg, err := config.Load()
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			return fmt.Errorf("error loading config: %w", err)
 		}

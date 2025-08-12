@@ -53,7 +53,7 @@ func removeProfile(profileName string) error {
 		return fmt.Errorf("the 'default' profile cannot be removed")
 	}
 
-	cfg, err := config.Load()
+	cfg, err := config.Load(cfgFile)
 	if err != nil {
 		return fmt.Errorf("loading config: %w", err)
 	}
@@ -70,7 +70,7 @@ func removeProfile(profileName string) error {
 
 	delete(cfg.Profiles, profileName)
 
-	if err := cfg.Save(); err != nil {
+	if err := cfg.Save(cfgFile); err != nil {
 		return fmt.Errorf("saving config: %w", err)
 	}
 	return nil

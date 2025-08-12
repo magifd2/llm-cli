@@ -28,6 +28,8 @@ import (
 // version is the version of the application. It is set at build time using ldflags.
 var version = "dev"
 
+var cfgFile string
+
 // rootCmd represents the base command for the llm-cli application.
 // It defines the application's name, version, short description, and long description.
 // rootCmdはllm-cliアプリケーションのベースコマンドです。
@@ -62,4 +64,5 @@ func Execute() error {
 // init関数はmainの前に呼び出されます。
 // ルートコマンドのフラグと設定を定義するために使用されます。
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.config/llm-cli/config.json)")
 }
