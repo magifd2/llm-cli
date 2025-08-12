@@ -10,13 +10,7 @@
 *   **Streaming Display**: Display responses from the LLM in real-time using the `--stream` flag.
 *   **Single Binary**: Operates as a single executable file (excluding configuration files), making it easy to distribute and use.
 
-## Global Options
 
-`llm-cli` supports a global `--config` flag that can be used with any command to specify the path to the configuration file. This overrides the default location.
-
-| Flag     | Shorthand | Description                                                                 |
-| -------- | --------- | --------------------------------------------------------------------------- |
-| `--config` | `-c`      | Path to the configuration file (default is `$HOME/.config/llm-cli/config.json`). |
 
 ## Installation
 
@@ -329,6 +323,14 @@ This command will inspect all your profiles and prompt you to update any `limits
 These values can be configured using the `llm-cli profile set` and `llm-cli profile add` commands.
 
 ## Command Reference
+
+### Global Options
+
+`llm-cli` supports a global `--config` flag that can be used with any command to specify the path to the configuration file. This overrides the default location.
+
+| Flag     | Shorthand | Description                                                                 |
+| -------- | --------- | --------------------------------------------------------------------------- |
+| `--config` | `-c`      | Path to the configuration file (default is `$HOME/.config/llm-cli/config.json`). |
 
 
 ### `llm-cli prompt`
