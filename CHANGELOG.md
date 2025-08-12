@@ -1,17 +1,20 @@
 # CHANGELOG
 
-## [Unreleased]
+## v1.0.0 - 2025-08-12
 
 ### ✨ Features
+*   **Config File Path Option**: Introduced a global `--config` (`-c`) flag to specify the path to the configuration file, overriding the default location.
 *   **Enhanced Profile Check Command with Configuration Validation**: The `llm-cli profile check` command now performs provider-specific configuration validation.
     *   Introduced a new `llm.ConfigValidator` interface, implemented by each LLM provider.
     *   Each provider's `ValidateConfig()` method checks for essential settings (e.g., `model`, `api-key`, `aws-region`, `project-id`, `credentials-file`) and their validity.
     *   The `check` command now reports detailed validation errors, helping users identify and fix misconfigurations early.
 
 ### ♻️ Refactor
+*   **Credential File Path Resolution**: Implemented logic to resolve `credentials-file` paths relative to the `config.json` file's location, and expanded `~` (tilde) to the user's home directory, ensuring correct path resolution regardless of the current working directory.
 *   **Provider Configuration Validation Interface**: Defined `llm.ConfigValidator` interface and implemented `ValidateConfig()` method across all LLM providers (`ollama`, `openai`, `openai2`, `bedrock`, `vertexai`, `vertexai2`, `mock`) to centralize and standardize configuration validation logic.
 
 ## v0.0.12 - 2025-08-08
+
 
 ### ✨ Features
 *   **Advanced OpenAI-Compatible Provider (`openai2`)**: Introduced a new `openai2` provider for OpenAI-compatible APIs (like LM Studio) that adds dynamic and flexible model resolution.
