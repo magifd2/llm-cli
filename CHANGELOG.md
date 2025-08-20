@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.0.1 - 2025-08-20
+
+### 🐛 Bug Fixes
+*   **Streaming Response Panic**: Fixed a "panic: close of closed channel" error that occurred when using the `--stream` option. Ensured `responseChan` is closed only once using `sync.Once`.
+
 ## v1.0.0 - 2025-08-12
 
 ### ✨ Features
