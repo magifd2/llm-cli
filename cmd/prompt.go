@@ -162,7 +162,8 @@ func handleStreamResponse(cmd *cobra.Command, provider llm.Provider, systemPromp
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer close(responseChan)
+		var once sync.Once
+		defer once.Do(func() { close(responseChan) }) // Ensure responseChan is closed only once
 		err := provider.ChatStream(cmd.Context(), systemPrompt, userPrompt, responseChan)
 		if err != nil {
 			errChan <- err
@@ -279,17 +280,17 @@ func readAndProcessStream(r io.Reader, source string, limits config.Limits, onEx
 				if onExceeded == "stop" {
 					return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
 				}
-			// For warn, write only up to the limit and then stop reading
-			bytesToWrite := limits.MaxPromptSizeBytes - totalBytes
-			if bytesToWrite > 0 {
-				buf.Write(chunk[:bytesToWrite])
+				// For warn, write only up to the limit and then stop reading
+				bytesToWrite := limits.MaxPromptSizeBytes - totalBytes
+				if bytesToWrite > 0 {
+					buf.Write(chunk[:bytesToWrite])
+				}
+				// Log warning and break from loop
+				fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
+				break // Stop reading further
 			}
-			// Log warning and break from loop
-			fmt.Fprintf(os.Stderr, "Warning: Input from %s exceeds the limit of %d bytes. Truncating...\n", source, limits.MaxPromptSizeBytes)
-			break // Stop reading further
-		}
-		buf.Write(chunk[:n])
-		totalBytes += int64(n)
+			buf.Write(chunk[:n])
+			totalBytes += int64(n)
 		}
 		if err == io.EOF {
 			break
@@ -315,7 +316,7 @@ func handlePromptData(data []byte, source string, limits config.Limits, onExceed
 		}
 		// Stop case should have been handled earlier for files/stdin, but as a fallback for direct values
 		return "", fmt.Errorf("input from %s exceeds size limit of %d bytes", source, limits.MaxPromptSizeBytes)
-		}
+	}
 
 	return sanitizedStr, nil
 }
